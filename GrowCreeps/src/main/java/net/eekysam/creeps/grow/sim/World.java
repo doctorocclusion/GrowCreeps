@@ -16,6 +16,8 @@ public class World
 	
 	public double accel = 1.0;
 	
+	public boolean doRender = true;
+	
 	private ArrayDeque<WorldObject> toSpawn = new ArrayDeque<WorldObject>();
 	private ArrayList<WorldObject> objects = new ArrayList<>();
 	
@@ -30,6 +32,17 @@ public class World
 	public void addSpawn(WorldObject object)
 	{
 		this.toSpawn.add(object);
+	}
+	
+	public void tick()
+	{
+		for (EnumTickPass pass : EnumTickPass.values())
+		{
+			if (pass != EnumTickPass.RENDER || this.doRender)
+			{
+				this.tick(pass);
+			}
+		}
 	}
 	
 	public void tick(EnumTickPass pass)
@@ -76,7 +89,10 @@ public class World
 		}
 		else if (pass == EnumTickPass.RENDER)
 		{
-			
+			for (WorldObject obj : this.objects)
+			{
+				obj.render();
+			}
 		}
 		else
 		{

@@ -121,4 +121,9 @@ public abstract class WorldObject
 		}
 		return false;
 	}
+	
+	public void render()
+	{
+		
+	}
 }

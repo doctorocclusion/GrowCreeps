@@ -2,20 +2,16 @@ package net.eekysam.creeps.grow.sim;
 
 import java.util.Arrays;
 
-import org.encog.ml.data.MLData;
-import org.encog.ml.data.basic.BasicMLData;
-import org.encog.neural.networks.BasicNetwork;
-
-import net.eekysam.creeps.grow.CreepSpec;
+import org.lwjgl.opengl.GL11;
 
 public class Creep extends WorldObject
 {
 	public static final int defColor = 0x007000;
-	
-	public final CreepInfo info;
-	public final CreepSpec spec;
-	
-	public final BasicNetwork ai;
+	public static final double rotSpeed = 0.04;
+	public static final double velMax = 0.5;
+	public static final double acc = 0.05;
+	public static final double sideAcc = 0.01;
+	public static final double fric = 0.98;
 	
 	public double[] hits;
 	
@@ -26,20 +22,6 @@ public class Creep extends WorldObject
 	public double[] rayHit;
 	
 	public int myColor = defColor;
-	
-	public MLData output;
-	public MLData input;
-	
-	public Creep(CreepSpec spec, CreepInfo info)
-	{
-		this.spec = spec;
-		this.info = info;
-		
-		this.ai = (BasicNetwork) this.spec.network.clone();
-		this.ai.clearContext();
-		
-		this.input = new BasicMLData(9);
-	}
 	
 	@Override
 	public void tick(double rate, EnumTickPass pass)
@@ -55,6 +37,20 @@ public class Creep extends WorldObject
 			
 			this.rayHit = new double[4];
 			this.rayHit[0] = Double.POSITIVE_INFINITY;
+			
+			this.radius = 10;
+		}
+		if (pass == EnumTickPass.MOVE)
+		{
+			this.velx *= fric;
+			this.vely *= fric;
+			double vel = this.velx * this.velx + this.vely * this.vely;
+			if (vel > velMax * velMax)
+			{
+				double scale = velMax / Math.sqrt(vel);
+				this.velx *= scale;
+				this.vely *= scale;
+			}
 		}
 		else if (pass == EnumTickPass.COMPUTE)
 		{
@@ -79,17 +75,17 @@ public class Creep extends WorldObject
 				toywall = this.world().height - this.y;
 			}
 			
-			double ltx = toxwall / this.cos;
-			double lty = toywall / this.sin;
+			double ltx = toxwall / Math.abs(this.cos);
+			double lty = toywall / Math.abs(this.sin);
 			
 			if (lty < ltx || Double.isNaN(ltx))
 			{
 				
-				this.addRayHit(toywall, this.world().wallColor);
+				this.addRayHit(lty, this.world().wallColor);
 			}
 			else
 			{
-				this.addRayHit(toxwall, this.world().wallColor);
+				this.addRayHit(ltx, this.world().wallColor);
 			}
 			
 			for (WorldObject obj : this.world().getObjects())
@@ -99,31 +95,6 @@ public class Creep extends WorldObject
 					this.addRayHit(this.intersection(obj.x, obj.y, obj.radius), obj.getColor());
 				}
 			}
-			
-			this.input.clear();
-			
-			for (int i = 0; i < 4; i++)
-			{
-				this.input.add(i, this.hits[i]);
-			}
-			for (int i = 0; i < 4; i++)
-			{
-				this.input.add(i + 4, this.rayHit[i]);
-			}
-			this.input.add(8, 1.0);
-			
-			this.output = this.ai.compute(this.input);
-		}
-		else if (pass == EnumTickPass.APPLY)
-		{
-			this.rot += (this.output.getData(0) - 0.5) * 0.01;
-			this.velx += this.cos * (this.output.getData(1) - 0.5) * 0.1;
-			this.vely += this.sin * (this.output.getData(1) - 0.5) * 0.1;
-			this.velx += this.sin * (this.output.getData(2) - 0.5) * 0.05;
-			this.vely += this.cos * (this.output.getData(2) - 0.5) * 0.05;
-			this.myColor = defColor;
-			this.myColor |= ((int) (this.output.getData(3) * 255) & 0xFF) << 0;
-			this.myColor |= ((int) (this.output.getData(4) * 255) & 0xFF) << 16;
 		}
 	}
 	
@@ -203,5 +174,55 @@ public class Creep extends WorldObject
 		}
 		
 		return 2 * c / (Math.sqrt(discr) - b);
+	}
+	
+	@Override
+	public void render()
+	{
+		double r = ((this.myColor >> 0) & 0xFF) / 255.0;
+		double g = ((this.myColor >> 8) & 0xFF) / 255.0;
+		double b = ((this.myColor >> 16) & 0xFF) / 255.0;
+		
+		GL11.glColor3d(r, g, b);
+		
+		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+		GL11.glVertex2d(this.x, this.y);
+		int n = 12;
+		for (int i = 0; i <= n; i++)
+		{
+			double th = 2 * Math.PI * ((double) i / n);
+			GL11.glVertex2d(this.x + Math.cos(th) * this.radius, this.y + Math.sin(th) * this.radius);
+		}
+		GL11.glEnd();
+		
+		GL11.glColor3d(1.0, 1.0, 1.0);
+		
+		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+		GL11.glVertex2d(this.x, this.y);
+		n = 2;
+		GL11.glVertex2d(this.x, this.y);
+		double w = (5 / 180.0) * Math.PI;
+		double l = this.rayHit[0] * 0.2 + this.radius;
+		for (int i = 0; i <= n; i++)
+		{
+			double th = w * ((double) i / n) - (w / 2) + this.rot;
+			GL11.glVertex2d(this.x + Math.cos(th) * l, this.y + Math.sin(th) * l);
+		}
+		GL11.glEnd();
+		
+		GL11.glColor3d(this.rayHit[1], this.rayHit[2], this.rayHit[3]);
+		
+		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+		GL11.glVertex2d(this.x, this.y);
+		n = 4;
+		GL11.glVertex2d(this.x, this.y);
+		w = (30 / 180.0) * Math.PI;
+		l = this.radius + 5;
+		for (int i = 0; i <= n; i++)
+		{
+			double th = w * ((double) i / n) - (w / 2) + this.rot;
+			GL11.glVertex2d(this.x + Math.cos(th) * l, this.y + Math.sin(th) * l);
+		}
+		GL11.glEnd();
 	}
 }
