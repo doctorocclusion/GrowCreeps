@@ -33,13 +33,13 @@ public class PlayerCreep extends Creep
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_A))
 			{
-				this.velx += this.sin * sideAcc;
-				this.vely += this.cos * sideAcc;
+				this.velx += this.sin * -sideAcc;
+				this.vely += this.cos * -sideAcc;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_D))
 			{
-				this.velx += this.sin * -sideAcc;
-				this.vely += this.cos * -sideAcc;
+				this.velx += this.sin * sideAcc;
+				this.vely += this.cos * sideAcc;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_R))
 			{

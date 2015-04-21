@@ -8,7 +8,7 @@ public class Creep extends WorldObject
 {
 	public static final int defColor = 0x007000;
 	public static final double rotSpeed = 0.04;
-	public static final double velMax = 0.5;
+	public static final double velMax = 1.0;
 	public static final double acc = 0.05;
 	public static final double sideAcc = 0.01;
 	public static final double fric = 0.98;
@@ -54,45 +54,18 @@ public class Creep extends WorldObject
 		}
 		else if (pass == EnumTickPass.COMPUTE)
 		{
-			double toxwall;
-			double toywall;
-			
-			if (this.cos < 0)
+			double wallDist = this.intersection(0, 0, this.world().radius, 1);
+			if (!Double.isFinite(wallDist))
 			{
-				toxwall = this.x;
+				wallDist = 0;
 			}
-			else
-			{
-				toxwall = this.world().width - this.x;
-			}
-			
-			if (this.sin < 0)
-			{
-				toywall = this.y;
-			}
-			else
-			{
-				toywall = this.world().height - this.y;
-			}
-			
-			double ltx = toxwall / Math.abs(this.cos);
-			double lty = toywall / Math.abs(this.sin);
-			
-			if (lty < ltx || Double.isNaN(ltx))
-			{
-				
-				this.addRayHit(lty, this.world().wallColor);
-			}
-			else
-			{
-				this.addRayHit(ltx, this.world().wallColor);
-			}
+			this.addRayHit(wallDist, this.world().wallColor);
 			
 			for (WorldObject obj : this.world().getObjects())
 			{
 				if (obj != this)
 				{
-					this.addRayHit(this.intersection(obj.x, obj.y, obj.radius), obj.getColor());
+					this.addRayHit(this.intersection(obj.x, obj.y, obj.radius, -1), obj.getColor());
 				}
 			}
 		}
@@ -152,28 +125,23 @@ public class Creep extends WorldObject
 		}
 	}
 	
-	public double intersection(double h, double k, double r)
+	public double intersection(double h, double k, double r, int dir)
 	{
 		double tox = this.x - h;
 		double toy = this.y - k;
 		
 		double c = tox * tox + toy * toy - r * r;
 		
-		if (c < 0)
-		{
-			return 0;
-		}
-		
 		double b = 2 * this.cos * tox + 2 * this.sin * toy;
 		
-		double discr = b * b + 4 * c;
+		double discr = b * b - 4 * c;
 		
 		if (discr < 0)
 		{
-			return Double.POSITIVE_INFINITY;
+			return Double.NaN;
 		}
 		
-		return 2 * c / (Math.sqrt(discr) - b);
+		return (-b + dir * Math.sqrt(discr)) / 2;
 	}
 	
 	@Override
@@ -185,44 +153,18 @@ public class Creep extends WorldObject
 		
 		GL11.glColor3d(r, g, b);
 		
-		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
-		GL11.glVertex2d(this.x, this.y);
-		int n = 12;
-		for (int i = 0; i <= n; i++)
-		{
-			double th = 2 * Math.PI * ((double) i / n);
-			GL11.glVertex2d(this.x + Math.cos(th) * this.radius, this.y + Math.sin(th) * this.radius);
-		}
-		GL11.glEnd();
+		World.renderCircle(this.x, this.y, this.radius, 12, 0, 2 * Math.PI);
 		
 		GL11.glColor3d(1.0, 1.0, 1.0);
 		
-		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
-		GL11.glVertex2d(this.x, this.y);
-		n = 2;
-		GL11.glVertex2d(this.x, this.y);
-		double w = (5 / 180.0) * Math.PI;
-		double l = this.rayHit[0] * 0.2 + this.radius;
-		for (int i = 0; i <= n; i++)
-		{
-			double th = w * ((double) i / n) - (w / 2) + this.rot;
-			GL11.glVertex2d(this.x + Math.cos(th) * l, this.y + Math.sin(th) * l);
-		}
-		GL11.glEnd();
+		double rad = this.rayHit[0];
+		
+		World.renderCircle(this.x, this.y, rad, 5, (this.radius * World.rad(-15)) / rad + this.rot, (this.radius * World.rad(15)) / rad + this.rot);
 		
 		GL11.glColor3d(this.rayHit[1], this.rayHit[2], this.rayHit[3]);
 		
-		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
-		GL11.glVertex2d(this.x, this.y);
-		n = 4;
-		GL11.glVertex2d(this.x, this.y);
-		w = (30 / 180.0) * Math.PI;
-		l = this.radius + 5;
-		for (int i = 0; i <= n; i++)
-		{
-			double th = w * ((double) i / n) - (w / 2) + this.rot;
-			GL11.glVertex2d(this.x + Math.cos(th) * l, this.y + Math.sin(th) * l);
-		}
+		World.renderCircle(this.x, this.y, this.radius * 1.2, 2, World.rad(-15) + this.rot, World.rad(15) + this.rot);
+		
 		GL11.glEnd();
 	}
 }

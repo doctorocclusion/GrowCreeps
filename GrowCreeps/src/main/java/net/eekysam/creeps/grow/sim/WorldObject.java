@@ -39,41 +39,23 @@ public abstract class WorldObject
 			double nx = this.x += this.velx * rate;
 			double ny = this.y += this.vely * rate;
 			
-			if (ny < 0)
-			{
-				ny = 0;
-				this.wallCollision(0, -1);
-				if (this.vely < 0)
-				{
-					this.vely = 0;
-				}
-			}
-			else if (ny > this.theWorld.height)
-			{
-				ny = this.theWorld.height;
-				this.wallCollision(0, 1);
-				if (this.vely > 0)
-				{
-					this.vely = 0;
-				}
-			}
+			double dist = ny * ny + nx * nx;
 			
-			if (nx < 0)
+			if (dist > this.theWorld.radius * this.theWorld.radius)
 			{
-				nx = 0;
-				this.wallCollision(-1, 0);
-				if (this.velx < 0)
+				dist = Math.sqrt(dist);
+				double ux = nx / dist;
+				double uy = ny / dist;
+				this.wallCollision(ux, uy);
+				
+				double dot = ux * this.velx + uy * this.vely;
+				
+				if (dot > 0)
 				{
-					this.velx = 0;
-				}
-			}
-			else if (nx > this.theWorld.width)
-			{
-				nx = this.theWorld.width;
-				this.wallCollision(1, 0);
-				if (this.velx > 0)
-				{
-					this.velx = 0;
+					double perpdot = ux * this.vely - uy * this.velx;
+					
+					this.velx = -uy * perpdot;
+					this.vely = ux * perpdot;
 				}
 			}
 			

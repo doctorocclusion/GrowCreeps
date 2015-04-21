@@ -6,10 +6,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+
 public class World
 {
-	public final double width;
-	public final double height;
+	public final double radius;
 	
 	public final int wallColor = 0xC0C0C0;
 	public final double ambiHardness = 0.1;
@@ -23,10 +24,9 @@ public class World
 	
 	public ArrayList<Collision> collisions = new ArrayList<>();
 	
-	public World(double width, double height)
+	public World(double radius)
 	{
-		this.width = width;
-		this.height = height;
+		this.radius = radius;
 	}
 	
 	public void addSpawn(WorldObject object)
@@ -89,6 +89,8 @@ public class World
 		}
 		else if (pass == EnumTickPass.RENDER)
 		{
+			GL11.glColor3d(0.1, 0.1, 0.1);
+			renderCircle(0, 0, this.radius, 30, 0, 2 * Math.PI);
 			for (WorldObject obj : this.objects)
 			{
 				obj.render();
@@ -106,5 +108,23 @@ public class World
 	public List<WorldObject> getObjects()
 	{
 		return Collections.unmodifiableList(this.objects);
+	}
+	
+	public static void renderCircle(double x, double y, double r, double n, double start, double end)
+	{
+		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+		GL11.glVertex2d(x, y);
+		double w = (end - start) / n;
+		for (int i = 0; i <= n; i++)
+		{
+			double th = w * i + start;
+			GL11.glVertex2d(x + Math.cos(th) * r, y + Math.sin(th) * r);
+		}
+		GL11.glEnd();
+	}
+	
+	public static double rad(double degrees)
+	{
+		return (degrees / 180.0) * Math.PI;
 	}
 }
