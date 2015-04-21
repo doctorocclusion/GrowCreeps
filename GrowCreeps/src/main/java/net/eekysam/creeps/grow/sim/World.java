@@ -15,7 +15,7 @@ public class World
 	public final int wallColor = 0xC0C0C0;
 	public final double ambiHardness = 0.1;
 	
-	public double accel = 1;
+	public final double speed;
 	
 	public boolean doRender = true;
 	
@@ -24,9 +24,10 @@ public class World
 	
 	public ArrayList<Collision> collisions = new ArrayList<>();
 	
-	public World(double radius)
+	public World(double radius, double speed)
 	{
 		this.radius = radius;
+		this.speed = speed;
 	}
 	
 	public void addSpawn(WorldObject object)
@@ -100,7 +101,7 @@ public class World
 		{
 			for (WorldObject obj : this.objects)
 			{
-				obj.tick(this.accel, pass);
+				obj.tick(this.speed, pass);
 			}
 		}
 	}

@@ -16,10 +16,10 @@ public class Main
 		Display.create();
 		
 		int rad = 100;
-		int rate = 5;
+		int rate = 30;
+		double speed = 2.0;
 		
-		World world = new World(rad);
-		world.accel = 30.0 / rate;
+		World world = new World(rad, speed * 30.0 / rate);
 		new PlayerCreep().spawn(world);
 		
 		while (!Display.isCloseRequested())

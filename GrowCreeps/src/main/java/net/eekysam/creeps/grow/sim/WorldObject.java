@@ -57,6 +57,9 @@ public abstract class WorldObject
 					this.velx = -uy * perpdot;
 					this.vely = ux * perpdot;
 				}
+				
+				nx = ux * this.theWorld.radius;
+				ny = uy * this.theWorld.radius;
 			}
 			
 			this.x = nx;
