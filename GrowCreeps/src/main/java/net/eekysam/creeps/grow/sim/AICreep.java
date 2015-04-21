@@ -49,11 +49,11 @@ public class AICreep extends Creep
 		}
 		else if (pass == EnumTickPass.APPLY)
 		{
-			this.rot += (this.output.getData(0) - 0.5) * rotSpeed;
-			this.velx += this.cos * (this.output.getData(1) - 0.5) * acc;
-			this.vely += this.sin * (this.output.getData(1) - 0.5) * acc;
-			this.velx += this.sin * (this.output.getData(2) - 0.5) * sideAcc;
-			this.vely += this.cos * (this.output.getData(2) - 0.5) * sideAcc;
+			this.rot += (this.output.getData(0) - 0.5) * rotSpeed * rate;
+			this.velx += this.cos * (this.output.getData(1) - 0.5) * acc * rate;
+			this.vely += this.sin * (this.output.getData(1) - 0.5) * acc * rate;
+			this.velx += this.sin * (this.output.getData(2) - 0.5) * sideAcc * rate;
+			this.vely += this.cos * (this.output.getData(2) - 0.5) * sideAcc * rate;
 			this.myColor = defColor;
 			this.myColor |= ((int) (this.output.getData(3) * 255) & 0xFF) << 0;
 			this.myColor |= ((int) (this.output.getData(4) * 255) & 0xFF) << 16;

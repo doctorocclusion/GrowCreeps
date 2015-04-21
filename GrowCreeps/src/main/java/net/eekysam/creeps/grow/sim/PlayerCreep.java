@@ -15,31 +15,31 @@ public class PlayerCreep extends Creep
 		{
 			if (Keyboard.isKeyDown(Keyboard.KEY_Q))
 			{
-				this.rot += rotSpeed;
+				this.rot += rotSpeed * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_E))
 			{
-				this.rot -= rotSpeed;
+				this.rot -= rotSpeed * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_W))
 			{
-				this.velx += this.cos * acc;
-				this.vely += this.sin * acc;
+				this.velx += this.cos * acc * rate;
+				this.vely += this.sin * acc * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_S))
 			{
-				this.velx += this.cos * -acc;
-				this.vely += this.sin * -acc;
+				this.velx += this.cos * -acc * rate;
+				this.vely += this.sin * -acc * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_A))
 			{
-				this.velx += this.sin * -sideAcc;
-				this.vely += this.cos * -sideAcc;
+				this.velx += this.sin * -sideAcc * rate;
+				this.vely += this.cos * -sideAcc * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_D))
 			{
-				this.velx += this.sin * sideAcc;
-				this.vely += this.cos * sideAcc;
+				this.velx += this.sin * sideAcc * rate;
+				this.vely += this.cos * sideAcc * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_R))
 			{

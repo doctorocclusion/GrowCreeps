@@ -42,8 +42,13 @@ public class Creep extends WorldObject
 		}
 		if (pass == EnumTickPass.MOVE)
 		{
-			this.velx *= fric;
-			this.vely *= fric;
+			double f = fric;
+			if (rate != 1.0)
+			{
+				f = Math.exp(Math.log(f) * rate);
+			}
+			this.velx *= f;
+			this.vely *= f;
 			double vel = this.velx * this.velx + this.vely * this.vely;
 			if (vel > velMax * velMax)
 			{

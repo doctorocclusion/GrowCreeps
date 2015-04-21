@@ -15,7 +15,11 @@ public class Main
 		Display.setDisplayMode(new DisplayMode(500, 500));
 		Display.create();
 		
-		World world = new World(200);
+		int rad = 100;
+		int rate = 5;
+		
+		World world = new World(rad);
+		world.accel = 30.0 / rate;
 		new PlayerCreep().spawn(world);
 		
 		while (!Display.isCloseRequested())
@@ -24,11 +28,11 @@ public class Main
 			
 			GL11.glMatrixMode(GL11.GL_PROJECTION);
 			GL11.glLoadIdentity();
-			GL11.glOrtho(-200, 200, -200, 200, 1, -1);
+			GL11.glOrtho(-rad, rad, -rad, rad, 1, -1);
 			GL11.glMatrixMode(GL11.GL_MODELVIEW);
 			
 			world.tick();
-			Display.sync(30);
+			Display.sync(rate);
 			Display.update();
 		}
 		

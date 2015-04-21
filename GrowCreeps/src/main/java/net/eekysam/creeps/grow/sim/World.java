@@ -15,7 +15,7 @@ public class World
 	public final int wallColor = 0xC0C0C0;
 	public final double ambiHardness = 0.1;
 	
-	public double accel = 1.0;
+	public double accel = 1;
 	
 	public boolean doRender = true;
 	
