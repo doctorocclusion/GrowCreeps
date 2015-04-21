@@ -91,6 +91,11 @@ public abstract class WorldObject
 		return this.remove;
 	}
 	
+	public void kill()
+	{
+		this.remove = true;
+	}
+	
 	public abstract int getColor();
 	
 	public abstract double getHardness();

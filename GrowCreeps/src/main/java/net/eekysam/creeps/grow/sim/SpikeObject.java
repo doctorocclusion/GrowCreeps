@@ -18,4 +18,14 @@ public class SpikeObject extends BrownianObject
 	{
 		return 0.9;
 	}
+	
+	@Override
+	public void collision(WorldObject other, double distsqr, double dot)
+	{
+		if (other instanceof Creep)
+		{
+			Creep creep = (Creep) other;
+			creep.health -= 3.0;
+		}
+	}
 }

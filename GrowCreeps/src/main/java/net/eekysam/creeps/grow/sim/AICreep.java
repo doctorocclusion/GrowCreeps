@@ -26,7 +26,7 @@ public class AICreep extends Creep
 		this.ai = (BasicNetwork) this.spec.network.clone();
 		this.ai.clearContext();
 		
-		this.input = new BasicMLData(9);
+		this.input = new BasicMLData(11);
 	}
 	
 	@Override
@@ -46,6 +46,8 @@ public class AICreep extends Creep
 				this.input.add(i + 4, this.rayHit[i]);
 			}
 			this.input.add(8, 1.0);
+			this.input.add(9, this.food);
+			this.input.add(10, this.health);
 			
 			this.output = this.ai.compute(this.input);
 		}

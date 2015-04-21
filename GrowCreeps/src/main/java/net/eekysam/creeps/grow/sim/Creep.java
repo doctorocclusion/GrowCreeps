@@ -1,6 +1,7 @@
 package net.eekysam.creeps.grow.sim;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
 
@@ -13,6 +14,9 @@ public class Creep extends WorldObject
 	public static final double sideAcc = 0.01;
 	public static final double fric = 0.98;
 	
+	public static final double healthMax = 200;
+	public static final double foodMax = 100;
+	
 	public double[] hits;
 	
 	public double rot;
@@ -22,6 +26,9 @@ public class Creep extends WorldObject
 	public double[] rayHit;
 	
 	public int myColor = defColor;
+	
+	public double health = healthMax;
+	public double food = foodMax / 2;
 	
 	public Creep(double radius)
 	{
@@ -75,6 +82,26 @@ public class Creep extends WorldObject
 				{
 					this.addRayHit(this.intersection(obj.x, obj.y, obj.radius, -1), obj.getColor());
 				}
+			}
+			
+			if (this.food <= 0)
+			{
+				this.food = 0;
+				this.health -= 2;
+			}
+			else
+			{
+				this.food -= 0.1;
+			}
+			
+			if (this.health < 0)
+			{
+				this.kill();
+				Random rand = new Random();
+				FoodObject meat = new FoodObject(1.5 * this.food / foodMax + Math.max(rand.nextGaussian() * 1 + 2.5, 0));
+				meat.x = this.x;
+				meat.y = this.y;
+				meat.spawn(this.world());
 			}
 		}
 	}
@@ -162,7 +189,7 @@ public class Creep extends WorldObject
 		double b = ((c >> 0) & 0xFF) / 255.0;
 		
 		GL11.glColor3d(r, g, b);
-		World.renderCircle(this.x, this.y, this.radius, 12, 0, 2 * Math.PI);
+		World.renderCircle(this.x, this.y, this.radius, 16, 0, 2 * Math.PI);
 		
 		double v = 1 - this.hits[0];
 		GL11.glColor3d(v, v, v);
@@ -180,16 +207,22 @@ public class Creep extends WorldObject
 		GL11.glColor3d(v, v, v);
 		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(-140) + this.rot, World.rad(-110) + this.rot);
 		
-		GL11.glColor3d(r, g, b);
-		World.renderCircle(this.x, this.y, this.radius * 0.8, 12, 0, 2 * Math.PI);
+		GL11.glColor3d(this.rayHit[1], this.rayHit[2], this.rayHit[3]);
+		World.renderCircle(this.x, this.y, this.radius * 1.2, 2, World.rad(-15) + this.rot, World.rad(15) + this.rot);
 		
+		/*
 		double rad = this.rayHit[0];
-		
 		GL11.glColor3d(1, 1, 1);
 		World.renderCircle(this.x, this.y, rad, 5, (this.radius * World.rad(-15)) / rad + this.rot, (this.radius * World.rad(15)) / rad + this.rot);
+		*/
 		
-		GL11.glColor3d(this.rayHit[1], this.rayHit[2], this.rayHit[3]);
-		
-		World.renderCircle(this.x, this.y, this.radius * 1.2, 2, World.rad(-15) + this.rot, World.rad(15) + this.rot);
+		GL11.glColor3d(0, 0, 0);
+		World.renderCircle(this.x, this.y, this.radius * 0.8, 12, 0, 2 * Math.PI);
+		GL11.glColor3d(1, 1, 1);
+		World.renderCircle(this.x, this.y, this.radius * 0.6, 10, this.rot, (this.food / foodMax) * 2 * Math.PI + this.rot);
+		GL11.glColor3d(0, 0, 0);
+		World.renderCircle(this.x, this.y, this.radius * 0.4, 10, 0, 2 * Math.PI);
+		GL11.glColor3d(1, 1, 1);
+		World.renderCircle(this.x, this.y, this.radius * 0.3, 10, this.rot, (this.health / healthMax) * 2 * Math.PI + this.rot);
 	}
 }
