@@ -1,6 +1,10 @@
 package net.eekysam.creeps.grow;
 
+import java.util.Random;
+
+import net.eekysam.creeps.grow.sim.FoodObject;
 import net.eekysam.creeps.grow.sim.PlayerCreep;
+import net.eekysam.creeps.grow.sim.SpikeObject;
 import net.eekysam.creeps.grow.sim.World;
 
 import org.lwjgl.LWJGLException;
@@ -17,10 +21,26 @@ public class Main
 		
 		int rad = 100;
 		int rate = 30;
-		double speed = 2.0;
+		double speed = 1.0;
 		
 		World world = new World(rad, speed * 30.0 / rate);
-		new PlayerCreep().spawn(world);
+		new PlayerCreep(10).spawn(world);
+		
+		Random rand = new Random();
+		
+		for (int i = 0; i < rand.nextInt(3) + 6; i++)
+		{
+			FoodObject food = new FoodObject(Math.max(5 + rand.nextGaussian() * 1.2, 1));
+			food.spawn(world);
+			food.randomLoc(rand);
+		}
+		
+		for (int i = 0; i < rand.nextInt(3) + 3; i++)
+		{
+			SpikeObject spike = new SpikeObject(Math.max(5 + rand.nextGaussian() * 1.2, 1));
+			spike.spawn(world);
+			spike.randomLoc(rand);
+		}
 		
 		while (!Display.isCloseRequested())
 		{

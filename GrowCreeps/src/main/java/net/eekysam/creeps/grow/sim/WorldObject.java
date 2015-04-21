@@ -1,6 +1,9 @@
 package net.eekysam.creeps.grow.sim;
 
+import java.util.Random;
 import java.util.UUID;
+
+import org.lwjgl.opengl.GL11;
 
 public abstract class WorldObject
 {
@@ -18,9 +21,10 @@ public abstract class WorldObject
 	
 	public final UUID id;
 	
-	public WorldObject()
+	public WorldObject(double radius)
 	{
 		this.id = UUID.randomUUID();
+		this.radius = radius;
 	}
 	
 	public void spawn(World world)
@@ -41,7 +45,7 @@ public abstract class WorldObject
 			
 			double dist = ny * ny + nx * nx;
 			
-			if (dist > this.theWorld.radius * this.theWorld.radius)
+			if (dist > (this.theWorld.radius - 0.02) * (this.theWorld.radius - 0.02))
 			{
 				dist = Math.sqrt(dist);
 				double ux = nx / dist;
@@ -58,8 +62,8 @@ public abstract class WorldObject
 					this.vely = ux * perpdot;
 				}
 				
-				nx = ux * this.theWorld.radius;
-				ny = uy * this.theWorld.radius;
+				nx = ux * (this.theWorld.radius - 0.01);
+				ny = uy * (this.theWorld.radius - 0.01);
 			}
 			
 			this.x = nx;
@@ -109,6 +113,21 @@ public abstract class WorldObject
 	
 	public void render()
 	{
+		int c = this.getColor();
 		
+		double r = ((c >> 16) & 0xFF) / 255.0;
+		double g = ((c >> 8) & 0xFF) / 255.0;
+		double b = ((c >> 0) & 0xFF) / 255.0;
+		
+		GL11.glColor3d(r, g, b);
+		
+		World.renderCircle(this.x, this.y, this.radius, 12, 0, 2 * Math.PI);
+	}
+	
+	public void randomLoc(Random rand)
+	{
+		this.x = (rand.nextDouble() - 0.5) * 2 * this.theWorld.radius;
+		this.y = Math.sqrt(this.theWorld.radius * this.theWorld.radius - this.x * this.x);
+		this.y *= (rand.nextDouble() - 0.5) * 2;
 	}
 }

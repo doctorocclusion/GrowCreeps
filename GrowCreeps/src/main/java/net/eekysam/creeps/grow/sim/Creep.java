@@ -6,7 +6,7 @@ import org.lwjgl.opengl.GL11;
 
 public class Creep extends WorldObject
 {
-	public static final int defColor = 0x007000;
+	public static final int defColor = 0x0000D0;
 	public static final double rotSpeed = 0.04;
 	public static final double velMax = 1.0;
 	public static final double acc = 0.05;
@@ -23,6 +23,11 @@ public class Creep extends WorldObject
 	
 	public int myColor = defColor;
 	
+	public Creep(double radius)
+	{
+		super(radius);
+	}
+	
 	@Override
 	public void tick(double rate, EnumTickPass pass)
 	{
@@ -37,8 +42,6 @@ public class Creep extends WorldObject
 			
 			this.rayHit = new double[4];
 			this.rayHit[0] = Double.POSITIVE_INFINITY;
-			
-			this.radius = 10;
 		}
 		if (pass == EnumTickPass.MOVE)
 		{
@@ -92,13 +95,13 @@ public class Creep extends WorldObject
 	public void addHit(double dx, double dy, double hardness)
 	{
 		int side = 0;
-		if (dx * this.cos - dy * this.sin > 0)
-		{
-			side += 2;
-		}
-		if (dx * this.sin + dy * this.cos > 0)
+		if (dx * this.sin - dy * this.cos > 0)
 		{
 			side += 1;
+		}
+		if (dx * this.cos + dy * this.sin < 0)
+		{
+			side += 2;
 		}
 		
 		if (this.hits[side] < hardness)
@@ -121,12 +124,12 @@ public class Creep extends WorldObject
 	
 	public void addRayHit(double dist, int color)
 	{
-		if (dist < this.rayHit[0])
+		if (dist < this.rayHit[0] && dist > 0)
 		{
 			this.rayHit[0] = dist;
-			this.rayHit[1] = ((color >> 0) & 0xFF) / 255.0;
+			this.rayHit[1] = ((color >> 16) & 0xFF) / 255.0;
 			this.rayHit[2] = ((color >> 8) & 0xFF) / 255.0;
-			this.rayHit[3] = ((color >> 16) & 0xFF) / 255.0;
+			this.rayHit[3] = ((color >> 0) & 0xFF) / 255.0;
 		}
 	}
 	
@@ -146,30 +149,47 @@ public class Creep extends WorldObject
 			return Double.NaN;
 		}
 		
-		return (-b + dir * Math.sqrt(discr)) / 2;
+		return 2 * c / (-b - dir * Math.sqrt(discr));
 	}
 	
 	@Override
 	public void render()
 	{
-		double r = ((this.myColor >> 0) & 0xFF) / 255.0;
-		double g = ((this.myColor >> 8) & 0xFF) / 255.0;
-		double b = ((this.myColor >> 16) & 0xFF) / 255.0;
+		int c = this.getColor();
+		
+		double r = ((c >> 16) & 0xFF) / 255.0;
+		double g = ((c >> 8) & 0xFF) / 255.0;
+		double b = ((c >> 0) & 0xFF) / 255.0;
 		
 		GL11.glColor3d(r, g, b);
-		
 		World.renderCircle(this.x, this.y, this.radius, 12, 0, 2 * Math.PI);
 		
-		GL11.glColor3d(1.0, 1.0, 1.0);
+		double v = 1 - this.hits[0];
+		GL11.glColor3d(v, v, v);
+		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(30) + this.rot, World.rad(60) + this.rot);
+		
+		v = 1 - this.hits[1];
+		GL11.glColor3d(v, v, v);
+		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(-60) + this.rot, World.rad(-30) + this.rot);
+		
+		v = 1 - this.hits[2];
+		GL11.glColor3d(v, v, v);
+		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(110) + this.rot, World.rad(140) + this.rot);
+		
+		v = 1 - this.hits[3];
+		GL11.glColor3d(v, v, v);
+		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(-140) + this.rot, World.rad(-110) + this.rot);
+		
+		GL11.glColor3d(r, g, b);
+		World.renderCircle(this.x, this.y, this.radius * 0.8, 12, 0, 2 * Math.PI);
 		
 		double rad = this.rayHit[0];
 		
+		GL11.glColor3d(1, 1, 1);
 		World.renderCircle(this.x, this.y, rad, 5, (this.radius * World.rad(-15)) / rad + this.rot, (this.radius * World.rad(15)) / rad + this.rot);
 		
 		GL11.glColor3d(this.rayHit[1], this.rayHit[2], this.rayHit[3]);
 		
 		World.renderCircle(this.x, this.y, this.radius * 1.2, 2, World.rad(-15) + this.rot, World.rad(15) + this.rot);
-		
-		GL11.glEnd();
 	}
 }
