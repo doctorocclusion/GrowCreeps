@@ -10,23 +10,23 @@ public class AICreep extends Creep
 {
 	public final BasicNetwork ai;
 	
-	public final CreepInfo info;
-	public final CreepSpec spec;
-	
 	public MLData output;
 	public MLData input;
 	
-	public AICreep(CreepSpec spec, CreepInfo info, double radius)
+	public AICreep(CreepSpec spec, BasicNetwork network)
 	{
-		super(radius);
+		super(spec);
 		
-		this.spec = spec;
-		this.info = info;
-		
-		this.ai = (BasicNetwork) this.spec.network.clone();
+		this.ai = (BasicNetwork) network.clone();
 		this.ai.clearContext();
 		
 		this.input = new BasicMLData(11);
+	}
+	
+	public double norm(double in)
+	{
+		double out = 1 / (1 + Math.exp(-in));
+		return out * 2 - 1;
 	}
 	
 	@Override
@@ -39,28 +39,33 @@ public class AICreep extends Creep
 			
 			for (int i = 0; i < 4; i++)
 			{
-				this.input.add(i, this.hits[i]);
+				this.input.add(i, 1 - this.hits[i] - 0.5);
 			}
 			for (int i = 0; i < 4; i++)
 			{
-				this.input.add(i + 4, this.rayHit[i]);
+				this.input.add(i + 4, 1 - this.rayHit[i] - 0.5);
 			}
-			this.input.add(8, 1.0);
-			this.input.add(9, this.food);
-			this.input.add(10, this.health);
+			this.input.add(8, (this.info.food / this.spec.maxFood) - 0.5);
+			this.input.add(9, (this.info.health / this.spec.maxHealth) - 0.5);
 			
 			this.output = this.ai.compute(this.input);
 		}
-		else if (pass == EnumTickPass.APPLY)
+		else if (pass == EnumTickPass.LAST)
 		{
-			this.rot += (this.output.getData(0) - 0.5) * rotSpeed * rate;
-			this.velx += this.cos * (this.output.getData(1) - 0.5) * acc * rate;
-			this.vely += this.sin * (this.output.getData(1) - 0.5) * acc * rate;
-			this.velx += -this.sin * (this.output.getData(2) - 0.5) * sideAcc * rate;
-			this.vely += this.cos * (this.output.getData(2) - 0.5) * sideAcc * rate;
-			this.myColor = defColor;
-			this.myColor |= ((int) (this.output.getData(3) * 255) & 0xFF) << 16;
-			this.myColor |= ((int) (this.output.getData(4) * 255) & 0xFF) << 8;
+			double drot = this.norm(this.output.getData(0));
+			if (Math.abs(drot) > 0.2)
+			{
+				drot -= Math.signum(drot) * 0.2;
+				drot /= 0.8;
+				this.rot += drot * this.spec.rotSpeed * rate;
+			}
+			this.velx += this.cos * this.norm(this.output.getData(1)) * this.spec.accel * rate;
+			this.vely += this.sin * this.norm(this.output.getData(1)) * this.spec.accel * rate;
+			this.velx += -this.sin * this.norm(this.output.getData(2)) * this.spec.accelSide * rate;
+			this.vely += this.cos * this.norm(this.output.getData(2)) * this.spec.accelSide * rate;
+			this.myColor = this.spec.baseColor;
+			this.myColor |= ((int) (this.norm(this.output.getData(3)) * 128 + 64) & 0xFF) << 16;
+			this.myColor |= ((int) (this.norm(this.output.getData(4)) * 128 + 64) & 0xFF) << 8;
 		}
 	}
 }

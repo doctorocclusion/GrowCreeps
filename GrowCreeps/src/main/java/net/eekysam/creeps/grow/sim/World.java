@@ -17,22 +17,34 @@ public class World
 	
 	public final double speed;
 	
-	public boolean doRender = true;
+	public boolean doRender;
 	
 	private ArrayDeque<WorldObject> toSpawn = new ArrayDeque<WorldObject>();
 	private ArrayList<WorldObject> objects = new ArrayList<>();
 	
 	public ArrayList<Collision> collisions = new ArrayList<>();
 	
-	public World(double radius, double speed)
+	private int creepCount = 0;
+	
+	public World(double radius, double speed, boolean render)
 	{
 		this.radius = radius;
 		this.speed = speed;
+		this.doRender = render;
 	}
 	
 	public void addSpawn(WorldObject object)
 	{
 		this.toSpawn.add(object);
+		if (object instanceof Creep)
+		{
+			this.creepCount++;
+		}
+	}
+	
+	public int countCreeps()
+	{
+		return this.creepCount;
 	}
 	
 	public void tick()
@@ -53,9 +65,14 @@ public class World
 			Iterator<WorldObject> objsit = this.objects.iterator();
 			while (objsit.hasNext())
 			{
-				if (objsit.next().isRemoved())
+				WorldObject obj = objsit.next();
+				if (obj.isRemoved())
 				{
 					objsit.remove();
+					if (obj instanceof Creep)
+					{
+						this.creepCount--;
+					}
 				}
 			}
 			while (!this.toSpawn.isEmpty())

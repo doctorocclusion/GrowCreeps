@@ -8,5 +8,5 @@ public enum EnumTickPass
 	COLLISIONS,
 	COMPUTE,
 	RENDER,
-	APPLY;
+	LAST;
 }

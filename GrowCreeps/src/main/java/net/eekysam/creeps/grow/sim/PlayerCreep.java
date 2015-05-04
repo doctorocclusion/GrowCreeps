@@ -1,5 +1,7 @@
 package net.eekysam.creeps.grow.sim;
 
+import net.eekysam.creeps.grow.CreepSpec;
+
 import org.lwjgl.input.Keyboard;
 
 public class PlayerCreep extends Creep
@@ -10,44 +12,44 @@ public class PlayerCreep extends Creep
 	boolean rdown = false;
 	boolean gdown = false;
 	
-	public PlayerCreep(double radius)
+	public PlayerCreep(CreepSpec spec)
 	{
-		super(radius);
+		super(spec);
 	}
 	
 	@Override
 	public void tick(double rate, EnumTickPass pass)
 	{
 		super.tick(rate, pass);
-		if (pass == EnumTickPass.APPLY)
+		if (pass == EnumTickPass.LAST)
 		{
 			if (Keyboard.isKeyDown(Keyboard.KEY_Q))
 			{
-				this.rot += rotSpeed * rate;
+				this.rot += this.spec.rotSpeed * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_E))
 			{
-				this.rot -= rotSpeed * rate;
+				this.rot -= this.spec.rotSpeed * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_W))
 			{
-				this.velx += this.cos * acc * rate;
-				this.vely += this.sin * acc * rate;
+				this.velx += this.cos * this.spec.accel * rate;
+				this.vely += this.sin * this.spec.accel * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_S))
 			{
-				this.velx += this.cos * -acc * rate;
-				this.vely += this.sin * -acc * rate;
+				this.velx += this.cos * -this.spec.accel * rate;
+				this.vely += this.sin * -this.spec.accel * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_A))
 			{
-				this.velx += -this.sin * sideAcc * rate;
-				this.vely += this.cos * sideAcc * rate;
+				this.velx += -this.sin * this.spec.accelSide * rate;
+				this.vely += this.cos * this.spec.accelSide * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_D))
 			{
-				this.velx += -this.sin * -sideAcc * rate;
-				this.vely += this.cos * -sideAcc * rate;
+				this.velx += -this.sin * -this.spec.accelSide * rate;
+				this.vely += this.cos * -this.spec.accelSide * rate;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_R))
 			{
@@ -91,7 +93,7 @@ public class PlayerCreep extends Creep
 				this.green = 0;
 			}
 			
-			this.myColor = defColor;
+			this.myColor = this.spec.baseColor;
 			this.myColor |= (this.red & 0xFF) << 16;
 			this.myColor |= (this.green & 0xFF) << 8;
 		}

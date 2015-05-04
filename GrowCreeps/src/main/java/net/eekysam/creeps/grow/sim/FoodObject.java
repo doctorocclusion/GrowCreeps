@@ -4,16 +4,16 @@ public class FoodObject extends BrownianObject
 {
 	public FoodObject(double radius)
 	{
-		super(radius);
+		super(radius * 1.5);
 	}
 	
 	@Override
-	public void tick(double rate, EnumTickPass pass)
+	public void tick(double speed, EnumTickPass pass)
 	{
-		super.tick(rate, pass);
+		super.tick(speed, pass);
 		if (pass == EnumTickPass.COMPUTE)
 		{
-			if (this.radius < 0)
+			if (this.radius <= 0.2)
 			{
 				this.kill();
 			}
@@ -38,12 +38,14 @@ public class FoodObject extends BrownianObject
 		if (other instanceof Creep)
 		{
 			Creep creep = (Creep) other;
-			if (creep.food < Creep.foodMax)
+			if (creep.info.food < creep.spec.maxFood)
 			{
-				creep.food += 2;
+				double speed = this.world().speed;
+				creep.info.food += 2 * speed;
+				creep.info.foodEaten += 2 * speed;
 				if (this.radius > 0)
 				{
-					this.radius -= 0.2;
+					this.radius -= (0.2 * speed) * 1.5;
 				}
 			}
 		}

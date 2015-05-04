@@ -3,19 +3,14 @@ package net.eekysam.creeps.grow.sim;
 import java.util.Arrays;
 import java.util.Random;
 
+import net.eekysam.creeps.grow.CreepSpec;
+
 import org.lwjgl.opengl.GL11;
 
 public class Creep extends WorldObject
 {
-	public static final int defColor = 0x0000D0;
-	public static final double rotSpeed = 0.04;
-	public static final double velMax = 1.0;
-	public static final double acc = 0.05;
-	public static final double sideAcc = 0.01;
-	public static final double fric = 0.98;
-	
-	public static final double healthMax = 200;
-	public static final double foodMax = 100;
+	public final CreepInfo info;
+	public final CreepSpec spec;
 	
 	public double[] hits;
 	
@@ -25,20 +20,22 @@ public class Creep extends WorldObject
 	
 	public double[] rayHit;
 	
-	public int myColor = defColor;
+	public int myColor;
 	
-	public double health = healthMax;
-	public double food = foodMax / 2;
-	
-	public Creep(double radius)
+	public Creep(CreepSpec spec)
 	{
-		super(radius);
+		super(spec.radius);
+		this.spec = spec;
+		this.info = new CreepInfo();
+		this.info.health = this.spec.maxHealth;
+		this.info.food = this.spec.startingFood;
+		this.myColor = this.spec.baseColor;
 	}
 	
 	@Override
-	public void tick(double rate, EnumTickPass pass)
+	public void tick(double speed, EnumTickPass pass)
 	{
-		super.tick(rate, pass);
+		super.tick(speed, pass);
 		if (pass == EnumTickPass.START)
 		{
 			this.hits = new double[4];
@@ -52,17 +49,18 @@ public class Creep extends WorldObject
 		}
 		if (pass == EnumTickPass.MOVE)
 		{
-			double f = fric;
-			if (rate != 1.0)
+			double f = 1 - this.spec.fric;
+			double mvel = this.spec.maxVel;
+			if (speed != 1.0)
 			{
-				f = Math.exp(Math.log(f) * rate);
+				f = Math.exp(Math.log(f) * speed);
 			}
 			this.velx *= f;
 			this.vely *= f;
 			double vel = this.velx * this.velx + this.vely * this.vely;
-			if (vel > velMax * velMax)
+			if (vel > mvel * mvel)
 			{
-				double scale = velMax / Math.sqrt(vel);
+				double scale = mvel / Math.sqrt(vel);
 				this.velx *= scale;
 				this.vely *= scale;
 			}
@@ -83,22 +81,36 @@ public class Creep extends WorldObject
 					this.addRayHit(this.intersection(obj.x, obj.y, obj.radius, -1), obj.getColor());
 				}
 			}
+		}
+		else if (pass == EnumTickPass.LAST)
+		{
+			this.info.age++;
+			this.info.adjustedAge += speed;
 			
-			if (this.food <= 0)
+			if (this.info.food <= 0)
 			{
-				this.food = 0;
-				this.health -= 2;
+				this.info.food = 0;
+				this.damage(EnumDmgType.STARVE, 2 * speed);
 			}
 			else
 			{
-				this.food -= 0.1;
+				double velDec = (this.velx * this.velx + this.vely * this.vely) / (this.spec.maxVel * this.spec.maxVel);
+				velDec -= 0.5;
+				if (this.cos * this.velx + this.sin * this.vely < 0)
+				{
+					velDec *= 1.5;
+				}
+				velDec *= 0.5;
+				velDec += 1;
+				this.info.food -= 0.1 * velDec * speed;
+				this.info.foodLost += 0.1 * velDec * speed;
 			}
 			
-			if (this.health < 0)
+			if (this.info.health <= 0)
 			{
 				this.kill();
 				Random rand = new Random();
-				FoodObject meat = new FoodObject(1.5 * this.food / foodMax + Math.max(rand.nextGaussian() * 1 + 2.5, 0));
+				FoodObject meat = new FoodObject(1.5 * this.info.food / this.spec.maxFood + Math.max(rand.nextGaussian() * 1 + 2.5, 0));
 				meat.x = this.x;
 				meat.y = this.y;
 				meat.spawn(this.world());
@@ -179,6 +191,12 @@ public class Creep extends WorldObject
 		return 2 * c / (-b - dir * Math.sqrt(discr));
 	}
 	
+	public void damage(EnumDmgType type, double dmg)
+	{
+		this.info.health = Math.max(0, this.info.health - dmg);
+		this.info.dmgTaken.put(type, this.info.dmgTaken.get(type) + dmg);
+	}
+	
 	@Override
 	public void render()
 	{
@@ -219,10 +237,10 @@ public class Creep extends WorldObject
 		GL11.glColor3d(0, 0, 0);
 		World.renderCircle(this.x, this.y, this.radius * 0.8, 12, 0, 2 * Math.PI);
 		GL11.glColor3d(1, 1, 1);
-		World.renderCircle(this.x, this.y, this.radius * 0.6, 10, this.rot, (this.food / foodMax) * 2 * Math.PI + this.rot);
+		World.renderCircle(this.x, this.y, this.radius * 0.6, 10, this.rot, (this.info.food / this.spec.maxFood) * 2 * Math.PI + this.rot);
 		GL11.glColor3d(0, 0, 0);
 		World.renderCircle(this.x, this.y, this.radius * 0.4, 10, 0, 2 * Math.PI);
 		GL11.glColor3d(1, 1, 1);
-		World.renderCircle(this.x, this.y, this.radius * 0.3, 10, this.rot, (this.health / healthMax) * 2 * Math.PI + this.rot);
+		World.renderCircle(this.x, this.y, this.radius * 0.3, 10, this.rot, (this.info.health / this.spec.maxHealth) * 2 * Math.PI + this.rot);
 	}
 }

@@ -2,6 +2,7 @@ package net.eekysam.creeps.grow.sim;
 
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.lwjgl.opengl.GL11;
 
@@ -36,12 +37,12 @@ public abstract class WorldObject
 		}
 	}
 	
-	public void tick(double rate, EnumTickPass pass)
+	public void tick(double speed, EnumTickPass pass)
 	{
 		if (pass == EnumTickPass.MOVE)
 		{
-			double nx = this.x += this.velx * rate;
-			double ny = this.y += this.vely * rate;
+			double nx = this.x += this.velx * speed;
+			double ny = this.y += this.vely * speed;
 			
 			double dist = ny * ny + nx * nx;
 			
@@ -129,10 +130,24 @@ public abstract class WorldObject
 		World.renderCircle(this.x, this.y, this.radius, 12, 0, 2 * Math.PI);
 	}
 	
+	public void randomLoc(Random rand, Function<Double, Double> radSmudge)
+	{
+		double theta = rand.nextDouble() * 2 * Math.PI;
+		double rad = rand.nextDouble();
+		rad = radSmudge.apply(rad) * this.theWorld.radius;
+		this.x = Math.sin(theta) * rad;
+		this.y = Math.cos(theta) * rad;
+	}
+	
 	public void randomLoc(Random rand)
 	{
-		this.x = (rand.nextDouble() - 0.5) * 2 * this.theWorld.radius;
-		this.y = Math.sqrt(this.theWorld.radius * this.theWorld.radius - this.x * this.x);
-		this.y *= (rand.nextDouble() - 0.5) * 2;
+		this.randomLoc(rand, new Function<Double, Double>()
+		{
+			@Override
+			public Double apply(Double rad)
+			{
+				return rad;
+			}
+		});
 	}
 }

@@ -24,8 +24,9 @@ public class SpikeObject extends BrownianObject
 	{
 		if (other instanceof Creep)
 		{
+			double speed = this.world().speed;
 			Creep creep = (Creep) other;
-			creep.health -= 3.0;
+			creep.damage(EnumDmgType.SPIKE, 3 * speed);
 		}
 	}
 }
