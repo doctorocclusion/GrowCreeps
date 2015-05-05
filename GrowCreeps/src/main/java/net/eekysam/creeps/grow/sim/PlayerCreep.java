@@ -18,38 +18,38 @@ public class PlayerCreep extends Creep
 	}
 	
 	@Override
-	public void tick(double rate, EnumTickPass pass)
+	public void tick(EnumTickPass pass)
 	{
-		super.tick(rate, pass);
+		super.tick(pass);
 		if (pass == EnumTickPass.LAST)
 		{
 			if (Keyboard.isKeyDown(Keyboard.KEY_Q))
 			{
-				this.rot += this.spec.rotSpeed * rate;
+				this.rot += this.spec.rotSpeed * this.speed;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_E))
 			{
-				this.rot -= this.spec.rotSpeed * rate;
+				this.rot -= this.spec.rotSpeed * this.speed;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_W))
 			{
-				this.velx += this.cos * this.spec.accel * rate;
-				this.vely += this.sin * this.spec.accel * rate;
+				this.velx += this.cos * this.spec.accel * this.speed;
+				this.vely += this.sin * this.spec.accel * this.speed;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_S))
 			{
-				this.velx += this.cos * -this.spec.accel * rate;
-				this.vely += this.sin * -this.spec.accel * rate;
+				this.velx += this.cos * -this.spec.accel * this.speed;
+				this.vely += this.sin * -this.spec.accel * this.speed;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_A))
 			{
-				this.velx += -this.sin * this.spec.accelSide * rate;
-				this.vely += this.cos * this.spec.accelSide * rate;
+				this.velx += -this.sin * this.spec.accelSide * this.speed;
+				this.vely += this.cos * this.spec.accelSide * this.speed;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_D))
 			{
-				this.velx += -this.sin * -this.spec.accelSide * rate;
-				this.vely += this.cos * -this.spec.accelSide * rate;
+				this.velx += -this.sin * -this.spec.accelSide * this.speed;
+				this.vely += this.cos * -this.spec.accelSide * this.speed;
 			}
 			if (Keyboard.isKeyDown(Keyboard.KEY_R))
 			{

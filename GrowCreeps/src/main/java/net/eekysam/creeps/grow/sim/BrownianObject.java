@@ -10,6 +10,8 @@ public abstract class BrownianObject extends WorldObject
 	
 	public Random rand;
 	
+	public double adjfric;
+	
 	public BrownianObject(double radius)
 	{
 		super(radius);
@@ -17,21 +19,23 @@ public abstract class BrownianObject extends WorldObject
 	}
 	
 	@Override
-	public void tick(double rate, EnumTickPass pass)
+	public void spawn(World world)
 	{
-		super.tick(rate, pass);
+		super.spawn(world);
+		this.adjfric = Math.exp(Math.log(fric) * this.speed);
+	}
+	
+	@Override
+	public void tick(EnumTickPass pass)
+	{
+		super.tick(pass);
 		if (pass == EnumTickPass.MOVE)
 		{
-			this.velx += this.rand.nextGaussian() * acc;
-			this.vely += this.rand.nextGaussian() * acc;
+			this.velx += (this.rand.nextDouble() * 2 - 1) * acc;
+			this.vely += (this.rand.nextDouble() * 2 - 1) * acc;
 			
-			double f = fric;
-			if (rate != 1.0)
-			{
-				f = Math.exp(Math.log(f) * rate);
-			}
-			this.velx *= f;
-			this.vely *= f;
+			this.velx *= this.adjfric;
+			this.vely *= this.adjfric;
 			double vel = this.velx * this.velx + this.vely * this.vely;
 			if (vel > velMax * velMax)
 			{

@@ -4,7 +4,7 @@ public class SpikeObject extends BrownianObject
 {
 	public SpikeObject(double radius)
 	{
-		super(radius);
+		super(radius * 1.2);
 	}
 	
 	@Override
@@ -16,17 +16,17 @@ public class SpikeObject extends BrownianObject
 	@Override
 	public double getHardness()
 	{
-		return 0.9;
+		return -1;
 	}
 	
 	@Override
-	public void collision(WorldObject other, double distsqr, double dot)
+	public void collision(WorldObject other, double distsqr, double velx, double vely)
 	{
 		if (other instanceof Creep)
 		{
-			double speed = this.world().speed;
+			double dmg = 1.5;
 			Creep creep = (Creep) other;
-			creep.damage(EnumDmgType.SPIKE, 3 * speed);
+			creep.damage(EnumDmgType.SPIKE, dmg * this.world().speed);
 		}
 	}
 }

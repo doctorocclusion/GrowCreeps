@@ -6,9 +6,9 @@ public class CreepSpec
 	
 	public int baseColor = 0x0000D0;
 	public double rotSpeed = 0.05;
-	public double maxVel = 0.7;
+	public double maxVel = 0.4;
 	public double accel = 0.10;
-	public double accelSide = 0.06;
+	public double accelSide = 0.01;
 	public double fric = 0.05;
 	
 	public double maxHealth = 200;

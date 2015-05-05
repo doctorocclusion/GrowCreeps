@@ -25,28 +25,28 @@ public class AICreep extends Creep
 	
 	public double norm(double in)
 	{
-		double out = 1 / (1 + Math.exp(-in));
+		double out = in;//1 / (1 + Math.exp(-in));
 		return out * 2 - 1;
 	}
 	
 	@Override
-	public void tick(double rate, EnumTickPass pass)
+	public void tick(EnumTickPass pass)
 	{
-		super.tick(rate, pass);
+		super.tick(pass);
 		if (pass == EnumTickPass.COMPUTE)
 		{
 			this.input.clear();
 			
 			for (int i = 0; i < 4; i++)
 			{
-				this.input.add(i, 1 - this.hits[i] - 0.5);
+				this.input.add(i, this.hits[i]);
 			}
 			for (int i = 0; i < 4; i++)
 			{
-				this.input.add(i + 4, 1 - this.rayHit[i] - 0.5);
+				this.input.add(i + 4, this.rayHit[i]);
 			}
-			this.input.add(8, (this.info.food / this.spec.maxFood) - 0.5);
-			this.input.add(9, (this.info.health / this.spec.maxHealth) - 0.5);
+			this.input.add(8, this.info.food / this.spec.maxFood);
+			this.input.add(9, this.info.health / this.spec.maxHealth);
 			
 			this.output = this.ai.compute(this.input);
 		}
@@ -57,15 +57,15 @@ public class AICreep extends Creep
 			{
 				drot -= Math.signum(drot) * 0.2;
 				drot /= 0.8;
-				this.rot += drot * this.spec.rotSpeed * rate;
+				this.rot += drot * this.spec.rotSpeed * this.speed;
 			}
-			this.velx += this.cos * this.norm(this.output.getData(1)) * this.spec.accel * rate;
-			this.vely += this.sin * this.norm(this.output.getData(1)) * this.spec.accel * rate;
-			this.velx += -this.sin * this.norm(this.output.getData(2)) * this.spec.accelSide * rate;
-			this.vely += this.cos * this.norm(this.output.getData(2)) * this.spec.accelSide * rate;
+			this.velx += this.cos * this.norm(this.output.getData(1)) * this.spec.accel * this.speed;
+			this.vely += this.sin * this.norm(this.output.getData(1)) * this.spec.accel * this.speed;
+			this.velx += -this.sin * this.norm(this.output.getData(2)) * this.spec.accelSide * this.speed;
+			this.vely += this.cos * this.norm(this.output.getData(2)) * this.spec.accelSide * this.speed;
 			this.myColor = this.spec.baseColor;
-			this.myColor |= ((int) (this.norm(this.output.getData(3)) * 128 + 64) & 0xFF) << 16;
-			this.myColor |= ((int) (this.norm(this.output.getData(4)) * 128 + 64) & 0xFF) << 8;
+			//this.myColor |= ((int) (this.norm(this.output.getData(3)) * 128 + 64) & 0xFF) << 16;
+			//this.myColor |= ((int) (this.norm(this.output.getData(4)) * 128 + 64) & 0xFF) << 8;
 		}
 	}
 }

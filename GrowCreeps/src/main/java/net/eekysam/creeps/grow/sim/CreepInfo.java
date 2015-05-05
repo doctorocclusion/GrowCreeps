@@ -2,8 +2,12 @@ package net.eekysam.creeps.grow.sim;
 
 import java.util.EnumMap;
 
+import net.eekysam.creeps.grow.CreepSpec;
+
 public class CreepInfo
 {
+	public CreepSpec spec;
+	
 	public long age = 0;
 	public double adjustedAge = 0;
 	
@@ -15,12 +19,23 @@ public class CreepInfo
 	
 	public EnumMap<EnumDmgType, Double> dmgTaken;
 	
-	public CreepInfo()
+	public CreepInfo(CreepSpec spec)
 	{
+		this.spec = spec;
 		this.dmgTaken = new EnumMap<>(EnumDmgType.class);
 		for (EnumDmgType type : EnumDmgType.values())
 		{
 			this.dmgTaken.put(type, 0.0);
 		}
+	}
+	
+	public double fitness()
+	{
+		double spike = 0;
+		if (this.dmgTaken.containsKey(EnumDmgType.SPIKE))
+		{
+			spike = this.dmgTaken.get(EnumDmgType.SPIKE);
+		}
+		return (this.adjustedAge / 1000) * 1.8 - (spike / this.spec.maxHealth) * 2.5 + (this.foodEaten / this.spec.maxFood) * 1.5;
 	}
 }

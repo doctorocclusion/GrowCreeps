@@ -5,15 +5,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 public class World
 {
+	public static boolean solidWalls = false;
+	
+	private static boolean keyDown = false;
+	
 	public final double radius;
 	
 	public final int wallColor = 0xC0C0C0;
-	public final double ambiHardness = 0.1;
+	public final double ambiHardness = 0.2;
 	
 	public final double speed;
 	
@@ -25,6 +31,8 @@ public class World
 	public ArrayList<Collision> collisions = new ArrayList<>();
 	
 	private int creepCount = 0;
+	
+	public Random rand = new Random();
 	
 	public World(double radius, double speed, boolean render)
 	{
@@ -60,6 +68,18 @@ public class World
 	
 	public void tick(EnumTickPass pass)
 	{
+		if (Keyboard.isKeyDown(Keyboard.KEY_TAB))
+		{
+			if (!keyDown)
+			{
+				keyDown = true;
+				this.doRender = !this.doRender;
+			}
+		}
+		else
+		{
+			keyDown = false;
+		}
 		if (pass == EnumTickPass.UPDATE_LIST)
 		{
 			Iterator<WorldObject> objsit = this.objects.iterator();
@@ -95,14 +115,14 @@ public class World
 					
 					if (dist <= (a.radius + b.radius) * (a.radius + b.radius))
 					{
-						this.collisions.add(new Collision(a, b, dist, a.velx * b.velx + a.vely * b.vely));
+						this.collisions.add(new Collision(a, b, dist, a.velx - b.velx, a.vely - b.vely));
 					}
 				}
 			}
 			for (Collision col : this.collisions)
 			{
-				col.a.collision(col.b, col.distsqr, col.velDot);
-				col.b.collision(col.a, col.distsqr, col.velDot);
+				col.a.collision(col.b, col.distsqr, col.velx, col.vely);
+				col.b.collision(col.a, col.distsqr, -col.velx, -col.vely);
 			}
 		}
 		else if (pass == EnumTickPass.RENDER)
@@ -118,9 +138,18 @@ public class World
 		{
 			for (WorldObject obj : this.objects)
 			{
-				obj.tick(this.speed, pass);
+				obj.tick(pass);
+			}
+			if (pass == EnumTickPass.COMPUTE)
+			{
+				this.spawnNew();
 			}
 		}
+	}
+	
+	public void spawnNew()
+	{
+		
 	}
 	
 	public List<WorldObject> getObjects()

@@ -2,6 +2,7 @@ package net.eekysam.creeps.grow.sim;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.function.Function;
 
 import net.eekysam.creeps.grow.CreepSpec;
 
@@ -17,25 +18,33 @@ public class Creep extends WorldObject
 	public double rot;
 	public double sin;
 	public double cos;
+	public boolean backwards;
+	public double adjfric;
 	
 	public double[] rayHit;
-	
 	public int myColor;
 	
 	public Creep(CreepSpec spec)
 	{
 		super(spec.radius);
 		this.spec = spec;
-		this.info = new CreepInfo();
+		this.info = new CreepInfo(spec);
 		this.info.health = this.spec.maxHealth;
 		this.info.food = this.spec.startingFood;
 		this.myColor = this.spec.baseColor;
 	}
 	
 	@Override
-	public void tick(double speed, EnumTickPass pass)
+	public void spawn(World world)
 	{
-		super.tick(speed, pass);
+		super.spawn(world);
+		this.adjfric = Math.exp(Math.log(1 - this.spec.fric) * this.speed);
+	}
+	
+	@Override
+	public void tick(EnumTickPass pass)
+	{
+		super.tick(pass);
 		if (pass == EnumTickPass.START)
 		{
 			this.hits = new double[4];
@@ -47,16 +56,11 @@ public class Creep extends WorldObject
 			this.rayHit = new double[4];
 			this.rayHit[0] = Double.POSITIVE_INFINITY;
 		}
-		if (pass == EnumTickPass.MOVE)
+		else if (pass == EnumTickPass.MOVE)
 		{
-			double f = 1 - this.spec.fric;
 			double mvel = this.spec.maxVel;
-			if (speed != 1.0)
-			{
-				f = Math.exp(Math.log(f) * speed);
-			}
-			this.velx *= f;
-			this.vely *= f;
+			this.velx *= this.adjfric;
+			this.vely *= this.adjfric;
 			double vel = this.velx * this.velx + this.vely * this.vely;
 			if (vel > mvel * mvel)
 			{
@@ -67,30 +71,37 @@ public class Creep extends WorldObject
 		}
 		else if (pass == EnumTickPass.COMPUTE)
 		{
-			double wallDist = this.intersection(0, 0, this.world().radius, 1);
-			if (!Double.isFinite(wallDist))
+			if (World.solidWalls)
 			{
-				wallDist = 0;
+				double wallDist = this.intersection(0, 0, this.world().radius, 1);
+				if (!Double.isFinite(wallDist))
+				{
+					wallDist = 0;
+				}
+				this.addRayHit(wallDist, this.world().wallColor);
 			}
-			this.addRayHit(wallDist, this.world().wallColor);
+			else
+			{
+				this.addRayHit(this.world().radius, this.world().wallColor);
+			}
 			
 			for (WorldObject obj : this.world().getObjects())
 			{
-				if (obj != this)
+				if (!(obj instanceof Creep))
 				{
-					this.addRayHit(this.intersection(obj.x, obj.y, obj.radius, -1), obj.getColor());
+					this.addRayHit(this.intersection(obj.x, obj.y, obj.radius * 1.2, -1), obj.getColor());
 				}
 			}
 		}
 		else if (pass == EnumTickPass.LAST)
 		{
 			this.info.age++;
-			this.info.adjustedAge += speed;
+			this.info.adjustedAge += this.speed;
 			
 			if (this.info.food <= 0)
 			{
 				this.info.food = 0;
-				this.damage(EnumDmgType.STARVE, 2 * speed);
+				this.damage(EnumDmgType.STARVE, 2 * this.speed);
 			}
 			else
 			{
@@ -98,12 +109,17 @@ public class Creep extends WorldObject
 				velDec -= 0.5;
 				if (this.cos * this.velx + this.sin * this.vely < 0)
 				{
+					this.backwards = true;
 					velDec *= 1.5;
+				}
+				else
+				{
+					this.backwards = false;
 				}
 				velDec *= 0.5;
 				velDec += 1;
-				this.info.food -= 0.1 * velDec * speed;
-				this.info.foodLost += 0.1 * velDec * speed;
+				this.info.food -= 0.1 * velDec * this.speed;
+				this.info.foodLost += 0.1 * velDec * this.speed;
 			}
 			
 			if (this.info.health <= 0)
@@ -113,22 +129,22 @@ public class Creep extends WorldObject
 				FoodObject meat = new FoodObject(1.5 * this.info.food / this.spec.maxFood + Math.max(rand.nextGaussian() * 1 + 2.5, 0));
 				meat.x = this.x;
 				meat.y = this.y;
-				meat.spawn(this.world());
+				//meat.spawn(this.world());
 			}
 		}
 	}
 	
 	@Override
-	public void collision(WorldObject other, double distsqr, double dot)
+	public void collision(WorldObject other, double distsqr, double velx, double vely)
 	{
-		super.collision(other, distsqr, dot);
+		super.collision(other, distsqr, velx, vely);
 		this.addHit(other.x - this.x, other.y - this.y, other.getHardness());
 	}
 	
 	@Override
 	public void wallCollision(double dx, double dy)
 	{
-		this.addHit(dx, dy, 0.5);
+		this.addHit(dx, dy, -0.5);
 	}
 	
 	public void addHit(double dx, double dy, double hardness)
@@ -143,7 +159,7 @@ public class Creep extends WorldObject
 			side += 2;
 		}
 		
-		if (this.hits[side] < hardness)
+		if (this.hits[side] > hardness || this.hits[side] == this.world().ambiHardness)
 		{
 			this.hits[side] = hardness;
 		}
@@ -158,11 +174,12 @@ public class Creep extends WorldObject
 	@Override
 	public double getHardness()
 	{
-		return 0.7;
+		return -0.1;
 	}
 	
 	public void addRayHit(double dist, int color)
 	{
+		dist /= this.world().radius;
 		if (dist < this.rayHit[0] && dist > 0)
 		{
 			this.rayHit[0] = dist;
@@ -170,6 +187,13 @@ public class Creep extends WorldObject
 			this.rayHit[2] = ((color >> 8) & 0xFF) / 255.0;
 			this.rayHit[3] = ((color >> 0) & 0xFF) / 255.0;
 		}
+	}
+	
+	@Override
+	public void randomLoc(Random rand, Function<Double, Double> radSmudge)
+	{
+		super.randomLoc(rand, radSmudge);
+		this.rot = rand.nextDouble() * 2 * Math.PI;
 	}
 	
 	public double intersection(double h, double k, double r, int dir)
@@ -209,19 +233,19 @@ public class Creep extends WorldObject
 		GL11.glColor3d(r, g, b);
 		World.renderCircle(this.x, this.y, this.radius, 16, 0, 2 * Math.PI);
 		
-		double v = 1 - this.hits[0];
+		double v = (1 + this.hits[0]) / 2;
 		GL11.glColor3d(v, v, v);
 		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(30) + this.rot, World.rad(60) + this.rot);
 		
-		v = 1 - this.hits[1];
+		v = (1 + this.hits[1]) / 2;
 		GL11.glColor3d(v, v, v);
 		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(-60) + this.rot, World.rad(-30) + this.rot);
 		
-		v = 1 - this.hits[2];
+		v = (1 + this.hits[2]) / 2;
 		GL11.glColor3d(v, v, v);
 		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(110) + this.rot, World.rad(140) + this.rot);
 		
-		v = 1 - this.hits[3];
+		v = (1 + this.hits[3]) / 2;
 		GL11.glColor3d(v, v, v);
 		World.renderCircle(this.x, this.y, this.radius, 2, World.rad(-140) + this.rot, World.rad(-110) + this.rot);
 		
@@ -234,11 +258,25 @@ public class Creep extends WorldObject
 		World.renderCircle(this.x, this.y, rad, 5, (this.radius * World.rad(-15)) / rad + this.rot, (this.radius * World.rad(15)) / rad + this.rot);
 		*/
 		
-		GL11.glColor3d(0, 0, 0);
+		if (this.backwards)
+		{
+			GL11.glColor3d(0.2, 0, 0);
+		}
+		else
+		{
+			GL11.glColor3d(0, 0, 0);
+		}
 		World.renderCircle(this.x, this.y, this.radius * 0.8, 12, 0, 2 * Math.PI);
 		GL11.glColor3d(1, 1, 1);
 		World.renderCircle(this.x, this.y, this.radius * 0.6, 10, this.rot, (this.info.food / this.spec.maxFood) * 2 * Math.PI + this.rot);
-		GL11.glColor3d(0, 0, 0);
+		if (this.backwards)
+		{
+			GL11.glColor3d(0.2, 0, 0);
+		}
+		else
+		{
+			GL11.glColor3d(0, 0, 0);
+		}
 		World.renderCircle(this.x, this.y, this.radius * 0.4, 10, 0, 2 * Math.PI);
 		GL11.glColor3d(1, 1, 1);
 		World.renderCircle(this.x, this.y, this.radius * 0.3, 10, this.rot, (this.info.health / this.spec.maxHealth) * 2 * Math.PI + this.rot);

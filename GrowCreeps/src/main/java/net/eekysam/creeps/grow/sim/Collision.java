@@ -4,15 +4,17 @@ public class Collision
 {
 	public final WorldObject a;
 	public final WorldObject b;
+	public final double velx;
+	public final double vely;
 	public final double distsqr;
-	public final double velDot;
 	
-	public Collision(WorldObject a, WorldObject b, double distsqr, double dot)
+	public Collision(WorldObject a, WorldObject b, double distsqr, double velx, double vely)
 	{
 		this.a = a;
 		this.b = b;
 		this.distsqr = distsqr;
-		this.velDot = dot;
+		this.velx = velx;
+		this.vely = vely;
 	}
 	
 	@Override

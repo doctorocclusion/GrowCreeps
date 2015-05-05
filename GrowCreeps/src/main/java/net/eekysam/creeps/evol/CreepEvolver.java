@@ -22,9 +22,15 @@ public abstract class CreepEvolver
 	
 	public abstract void simulate(int generation, List<CreepChrom> chroms);
 	
+	public void startSimulation()
+	{
+		
+	}
+	
 	public CreepPopulation evolve(double crossoverRate, double mutationRate, double elitismRate)
 	{
 		CreepGenetic gen = new CreepGenetic(this.crossover(), crossoverRate, this.mutation(), mutationRate, this.selection());
+		this.startSimulation();
 		return ((CreepPopulation) gen.evolve(new CreepPopulation(this, this.getInitial(), elitismRate), this.condition()));
 	}
 }

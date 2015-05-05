@@ -22,6 +22,8 @@ public abstract class WorldObject
 	
 	public final UUID id;
 	
+	public double speed;
+	
 	public WorldObject(double radius)
 	{
 		this.id = UUID.randomUUID();
@@ -33,38 +35,47 @@ public abstract class WorldObject
 		if (this.theWorld == null)
 		{
 			this.theWorld = world;
+			this.speed = this.theWorld.speed;
 			this.theWorld.addSpawn(this);
 		}
 	}
 	
-	public void tick(double speed, EnumTickPass pass)
+	public void tick(EnumTickPass pass)
 	{
 		if (pass == EnumTickPass.MOVE)
 		{
-			double nx = this.x += this.velx * speed;
-			double ny = this.y += this.vely * speed;
+			double nx = this.x += this.velx * this.speed;
+			double ny = this.y += this.vely * this.speed;
 			
 			double dist = ny * ny + nx * nx;
 			
 			if (dist > (this.theWorld.radius - 0.02) * (this.theWorld.radius - 0.02))
 			{
-				dist = Math.sqrt(dist);
-				double ux = nx / dist;
-				double uy = ny / dist;
-				this.wallCollision(ux, uy);
-				
-				double dot = ux * this.velx + uy * this.vely;
-				
-				if (dot > 0)
+				if (World.solidWalls)
 				{
-					double perpdot = ux * this.vely - uy * this.velx;
+					dist = Math.sqrt(dist);
+					double ux = nx / dist;
+					double uy = ny / dist;
+					this.wallCollision(ux, uy);
 					
-					this.velx = -uy * perpdot;
-					this.vely = ux * perpdot;
+					double dot = ux * this.velx + uy * this.vely;
+					
+					if (dot > 0)
+					{
+						double perpdot = ux * this.vely - uy * this.velx;
+						
+						this.velx = -uy * perpdot;
+						this.vely = ux * perpdot;
+					}
+					
+					nx = ux * (this.theWorld.radius - 0.01);
+					ny = uy * (this.theWorld.radius - 0.01);
 				}
-				
-				nx = ux * (this.theWorld.radius - 0.01);
-				ny = uy * (this.theWorld.radius - 0.01);
+				else
+				{
+					nx = nx * -0.96;
+					ny = ny * -0.96;
+				}
 			}
 			
 			this.x = nx;
@@ -77,7 +88,7 @@ public abstract class WorldObject
 		
 	}
 	
-	public void collision(WorldObject other, double distsqr, double dot)
+	public void collision(WorldObject other, double distsqr, double velx, double vely)
 	{
 		
 	}
