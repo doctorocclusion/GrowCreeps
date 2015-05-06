@@ -21,6 +21,21 @@ class CreepGenetic extends GeneticAlgorithm
 		{
 			((CreepPopulation) current).runSimulation(this.getGenerationsEvolved());
 		}
-		return super.nextGeneration(current);
+		Population next = super.nextGeneration(current);
+		Population out = next;
+		/*
+		if (current instanceof CreepPopulation)
+		{
+			CreepPopulation cp = (CreepPopulation) current;
+			out = new CreepPopulation(cp.evolver, cp.getPopulationLimit(), cp.getElitismRate());
+			out.addChromosome(current.getFittestChromosome());
+			Iterator<Chromosome> it = next.iterator();
+			while (out.getPopulationSize() < out.getPopulationLimit() && it.hasNext())
+			{
+				out.addChromosome(it.next());
+			}
+		}
+		*/
+		return out;
 	}
 }

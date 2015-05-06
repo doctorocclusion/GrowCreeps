@@ -68,6 +68,8 @@ public class Creep extends WorldObject
 				this.velx *= scale;
 				this.vely *= scale;
 			}
+			
+			this.backwards = this.cos * this.velx + this.sin * this.vely < 0;
 		}
 		else if (pass == EnumTickPass.COMPUTE)
 		{
@@ -97,6 +99,7 @@ public class Creep extends WorldObject
 		{
 			this.info.age++;
 			this.info.adjustedAge += this.speed;
+			double vel = (this.velx * this.velx + this.vely * this.vely) / (this.spec.maxVel * this.spec.maxVel);
 			
 			if (this.info.food <= 0)
 			{
@@ -105,21 +108,9 @@ public class Creep extends WorldObject
 			}
 			else
 			{
-				double velDec = (this.velx * this.velx + this.vely * this.vely) / (this.spec.maxVel * this.spec.maxVel);
-				velDec -= 0.5;
-				if (this.cos * this.velx + this.sin * this.vely < 0)
-				{
-					this.backwards = true;
-					velDec *= 1.5;
-				}
-				else
-				{
-					this.backwards = false;
-				}
-				velDec *= 0.5;
-				velDec += 1;
-				this.info.food -= 0.1 * velDec * this.speed;
-				this.info.foodLost += 0.1 * velDec * this.speed;
+				double veldec = vel * 0.06 + 1;
+				this.info.food -= 0.1 * veldec * this.speed;
+				this.info.foodLost += 0.1 * veldec * this.speed;
 			}
 			
 			if (this.info.health <= 0)
@@ -130,6 +121,12 @@ public class Creep extends WorldObject
 				meat.x = this.x;
 				meat.y = this.y;
 				//meat.spawn(this.world());
+			}
+			
+			this.info.health += 0.5 * 1 / (1 + this.info.adjustedAge / 3000) * (1 - vel + 0.5);
+			if (this.info.health > this.spec.maxHealth)
+			{
+				this.info.health = this.spec.maxHealth;
 			}
 		}
 	}
@@ -145,6 +142,10 @@ public class Creep extends WorldObject
 	public void wallCollision(double dx, double dy)
 	{
 		this.addHit(dx, dy, -0.5);
+		if (this.backwards)
+		{
+			this.info.health -= 0.1 * this.speed;
+		}
 	}
 	
 	public void addHit(double dx, double dy, double hardness)

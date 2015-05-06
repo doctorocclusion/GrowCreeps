@@ -42,10 +42,6 @@ public class FoodObject extends BrownianObject
 			{
 				double speed = this.world().speed;
 				double food = 0.6;
-				if (creep.backwards)
-				{
-					food /= 2;
-				}
 				creep.info.food += 2 * food * speed;
 				creep.info.foodEaten += 2 * food * speed;
 				if (this.radius > 0)

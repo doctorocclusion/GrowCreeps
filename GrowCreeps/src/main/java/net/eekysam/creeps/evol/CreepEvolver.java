@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.commons.math3.genetics.Chromosome;
 import org.apache.commons.math3.genetics.CrossoverPolicy;
+import org.apache.commons.math3.genetics.FixedGenerationCount;
 import org.apache.commons.math3.genetics.MutationPolicy;
 import org.apache.commons.math3.genetics.SelectionPolicy;
 import org.apache.commons.math3.genetics.StoppingCondition;
@@ -18,8 +19,6 @@ public abstract class CreepEvolver
 	
 	public abstract SelectionPolicy selection();
 	
-	public abstract StoppingCondition condition();
-	
 	public abstract void simulate(int generation, List<CreepChrom> chroms);
 	
 	public void startSimulation()
@@ -27,10 +26,11 @@ public abstract class CreepEvolver
 		
 	}
 	
-	public CreepPopulation evolve(double crossoverRate, double mutationRate, double elitismRate)
+	public CreepPopulation evolve(double crossoverRate, double mutationRate, double elitismRate, int generations)
 	{
+		StoppingCondition stop = new FixedGenerationCount(generations);
 		CreepGenetic gen = new CreepGenetic(this.crossover(), crossoverRate, this.mutation(), mutationRate, this.selection());
 		this.startSimulation();
-		return ((CreepPopulation) gen.evolve(new CreepPopulation(this, this.getInitial(), elitismRate), this.condition()));
+		return ((CreepPopulation) gen.evolve(new CreepPopulation(this, this.getInitial(), elitismRate), stop));
 	}
 }

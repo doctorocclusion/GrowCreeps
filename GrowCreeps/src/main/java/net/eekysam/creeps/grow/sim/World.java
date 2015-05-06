@@ -7,14 +7,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 public class World
 {
-	public static boolean solidWalls = false;
-	
-	private static boolean keyDown = false;
+	public static boolean solidWalls = true;
 	
 	public final double radius;
 	
@@ -68,18 +65,6 @@ public class World
 	
 	public void tick(EnumTickPass pass)
 	{
-		if (Keyboard.isKeyDown(Keyboard.KEY_TAB))
-		{
-			if (!keyDown)
-			{
-				keyDown = true;
-				this.doRender = !this.doRender;
-			}
-		}
-		else
-		{
-			keyDown = false;
-		}
 		if (pass == EnumTickPass.UPDATE_LIST)
 		{
 			Iterator<WorldObject> objsit = this.objects.iterator();
