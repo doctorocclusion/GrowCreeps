@@ -76,7 +76,7 @@ public class MainTest
 			}
 		};
 		
-		CreepPopulation pop = evo.evolve(0.05, 0.5, 0.9, 300);
+		CreepPopulation pop = evo.evolve(0.10, 0.5, 18.0 / 24, 300);
 		pop.runSimulation(300);
 		
 		Display.destroy();

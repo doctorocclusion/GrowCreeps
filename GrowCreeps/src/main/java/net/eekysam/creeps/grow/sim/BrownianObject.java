@@ -15,6 +15,7 @@ public abstract class BrownianObject extends WorldObject
 	public BrownianObject(double radius)
 	{
 		super(radius);
+		this.rand = new Random();
 	}
 	
 	@Override

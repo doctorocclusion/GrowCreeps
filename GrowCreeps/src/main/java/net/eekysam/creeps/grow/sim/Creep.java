@@ -10,6 +10,8 @@ import org.lwjgl.opengl.GL11;
 
 public class Creep extends WorldObject
 {
+	public static boolean hostile = false;
+	
 	public final CreepInfo info;
 	public final CreepSpec spec;
 	
@@ -93,7 +95,7 @@ public class Creep extends WorldObject
 			
 			for (WorldObject obj : this.world().getObjects())
 			{
-				if (!(obj instanceof Creep))
+				if (hostile || !(obj instanceof Creep))
 				{
 					this.addRayHit(this.intersection(obj.x, obj.y, obj.radius * 1.2, -1), obj.getColor());
 				}
@@ -110,7 +112,7 @@ public class Creep extends WorldObject
 			if (this.info.food <= 0)
 			{
 				this.info.food = 0;
-				this.damage(EnumDmgType.STARVE, 2 * this.speed);
+				this.damage(EnumDmgType.STARVE, 2);
 			}
 			else
 			{
@@ -129,11 +131,11 @@ public class Creep extends WorldObject
 				//meat.spawn(this.world());
 			}
 			
-			this.info.health += 0.5 * 1 / (1 + this.info.adjustedAge / 3000) * (1 - vel + 0.5);
-			if (this.info.health > this.spec.maxHealth)
-			{
-				this.info.health = this.spec.maxHealth;
-			}
+			//this.info.health += 0.5 * 1 / (1 + this.info.adjustedAge / 3000) * (1 - vel + 0.5);
+			//if (this.info.health > this.spec.maxHealth)
+			//{
+			//	this.info.health = this.spec.maxHealth;
+			//}
 		}
 	}
 	
@@ -141,6 +143,16 @@ public class Creep extends WorldObject
 	public void collision(WorldObject other, double distsqr, double velx, double vely)
 	{
 		super.collision(other, distsqr, velx, vely);
+		if (hostile && other instanceof Creep)
+		{
+			Creep creep = (Creep) other;
+			if (creep.action2 < this.action2)
+			{
+				creep.damage(EnumDmgType.CREEP, 0.2);
+				this.info.food += 0.5;
+				this.info.dmgDelt += 0.15;
+			}
+		}
 		this.addHit(other.x - this.x, other.y - this.y, other.getHardness());
 	}
 	
@@ -148,7 +160,7 @@ public class Creep extends WorldObject
 	public void wallCollision(double dx, double dy)
 	{
 		this.addHit(dx, dy, -0.5);
-		//this.info.health -= 0.1 * this.speed;
+		this.damage(EnumDmgType.WALL, 0.2);
 	}
 	
 	public void addHit(double dx, double dy, double hardness)
@@ -178,7 +190,7 @@ public class Creep extends WorldObject
 	@Override
 	public double getHardness()
 	{
-		return -0.1;
+		return -0.5;
 	}
 	
 	public void addRayHit(double dist, int color)
@@ -222,8 +234,8 @@ public class Creep extends WorldObject
 	
 	public void damage(EnumDmgType type, double dmg)
 	{
-		this.info.health = Math.max(0, this.info.health - dmg);
-		this.info.dmgTaken.put(type, this.info.dmgTaken.get(type) + dmg);
+		this.info.health = Math.max(0, this.info.health - dmg * this.speed);
+		this.info.dmgTaken.put(type, this.info.dmgTaken.get(type) + dmg * this.speed);
 	}
 	
 	@Override

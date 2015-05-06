@@ -16,6 +16,7 @@ public class CreepInfo
 	
 	public double foodEaten;
 	public double foodLost;
+	public double dmgDelt;
 	
 	public EnumMap<EnumDmgType, Double> dmgTaken;
 	
@@ -38,6 +39,6 @@ public class CreepInfo
 		}
 		spike /= this.spec.maxHealth;
 		spike += 1;
-		return (this.adjustedAge / 1000 + 1) * (this.foodEaten / this.spec.maxFood + 1) / spike;
+		return (this.adjustedAge / 1000 + 1) * (1 + this.dmgDelt / this.spec.maxHealth) * (this.foodEaten / this.spec.maxFood + 1) / spike;
 	}
 }

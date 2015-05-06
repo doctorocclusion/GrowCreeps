@@ -27,7 +27,7 @@ public class FoodObject extends BrownianObject
 			{
 				if (this.move)
 				{
-					//this.randomLoc(this.rand);
+					this.randomLoc(this.rand);
 				}
 				else
 				{
@@ -67,14 +67,14 @@ public class FoodObject extends BrownianObject
 			if (creep.info.food < creep.spec.maxFood)
 			{
 				double speed = this.world().speed;
-				double food = 0.2;
-				food *= creep.action1;
-				creep.info.food += 2 * food * speed;
-				creep.info.foodEaten += 2 * food * speed;
+				double food = 0.4;
 				if (this.radius > 0)
 				{
-					this.radius -= (0.4 * food * speed);
+					this.radius -= (0.2 * food * speed);
 				}
+				food *= (creep.action1 + 0.3);
+				creep.info.food += 2 * food * speed;
+				creep.info.foodEaten += 2 * food * speed;
 			}
 			this.velx += 0.02 * (this.x - creep.x) / this.radius;
 			this.vely += 0.02 * (this.y - creep.y) / this.radius;

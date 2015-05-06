@@ -31,6 +31,7 @@ import net.eekysam.creeps.grow.CreepSpec;
 import net.eekysam.creeps.grow.sim.AICreep;
 import net.eekysam.creeps.grow.sim.Creep;
 import net.eekysam.creeps.grow.sim.FoodObject;
+import net.eekysam.creeps.grow.sim.SpikeObject;
 import net.eekysam.creeps.grow.sim.World;
 import net.eekysam.creeps.grow.sim.WorldObject;
 
@@ -50,9 +51,9 @@ public class TestEvolver extends CreepEvolver
 		}
 	}
 	
-	public int tournamentSize = 16;
+	public int tournamentSize = 4;
 	public double crossoverRatio = 0.98;
-	public int simSize = 8;
+	public int simSize = 1;
 	public int populationSize = 24;
 	
 	public UnivariateStatistic center = new Median();
@@ -106,7 +107,7 @@ public class TestEvolver extends CreepEvolver
 		network.addLayer(new BasicLayer(null, true, 8));
 		network.addLayer(layer1 = new BasicLayer(active, true, 12));
 		network.addLayer(layer2 = new BasicLayer(active, true, 8));
-		network.addLayer(new BasicLayer(active, false, 4));
+		network.addLayer(new BasicLayer(active, false, 5));
 		layer1.setContextFedBy(layer2);
 		network.getStructure().finalizeStructure();
 		network.reset();
@@ -134,18 +135,18 @@ public class TestEvolver extends CreepEvolver
 	@Override
 	public MutationPolicy mutation()
 	{
-		return new CreepMutation(1, 1)
+		return new CreepMutation(1, 3)
 		{
 			@Override
 			public Double apply(Double past, Random rand)
 			{
-				double mult = rand.nextGaussian() * 0.1;
+				double mult = rand.nextGaussian() * 0.15;
 				mult += 1;
-				if (rand.nextFloat() < 0.01)
+				if (rand.nextFloat() < 0.05)
 				{
 					mult *= -1;
 				}
-				return past * mult + rand.nextGaussian() * 0.1;
+				return past * mult + rand.nextGaussian() * 0.15;
 			}
 		};
 	}
@@ -173,7 +174,7 @@ public class TestEvolver extends CreepEvolver
 	{
 		int n = 16;
 		
-		Random rand = new Random();
+		Random rand = new Random(347527825);
 		long seed = rand.nextLong();
 		
 		//Make sure that the number of chroms is a multiple of the simSize
@@ -243,7 +244,7 @@ public class TestEvolver extends CreepEvolver
 	
 	public void runWorld(Creep[] creeps, WorldRun run, Random rand)
 	{
-		double rad = 150;
+		double rad = 100;
 		double speed = 4;
 		World world = new World(rad, speed, false, rand)
 		{
@@ -255,12 +256,12 @@ public class TestEvolver extends CreepEvolver
 				{
 					if (obj instanceof FoodObject)
 					{
-						total += obj.radius;
+						total += obj.radius * 1.5;
 					}
 				}
-				if (this.rand.nextDouble() * (85 / this.speed + total * 0.4) < 1 && total < this.countCreeps() * 120)
+				if (this.rand.nextDouble() * (60 + total * 1.0) < 1 * this.speed && total < this.countCreeps() * 40)
 				{
-					FoodObject food = new FoodObject(Math.max(4 + this.rand.nextGaussian() * 1.2, 1));
+					FoodObject food = TestEvolver.this.genFood(this.rand);
 					food.spawn(this);
 					food.randomLoc(this.rand);
 				}
@@ -273,9 +274,9 @@ public class TestEvolver extends CreepEvolver
 			creep.randomLoc(rand);
 		}
 		
-		for (int i = 0; i < 8; i++)
+		for (int i = 0; i < 3; i++)
 		{
-			FoodObject food = new FoodObject(Math.max(5 + rand.nextGaussian() * 1.2, 1));
+			FoodObject food = this.genFood(rand);
 			food.spawn(world);
 			food.randomLoc(rand, new Function<Double, Double>()
 			{
@@ -287,22 +288,19 @@ public class TestEvolver extends CreepEvolver
 			});
 		}
 		
-		/*
-		 * for (int i = 0; i < 10; i++)
-		 * {
-		 * SpikeObject spike = new SpikeObject(Math.max(6 + rand.nextGaussian()
-		 * * 1.3, 1));
-		 * spike.spawn(world);
-		 * spike.randomLoc(rand, new Function<Double, Double>()
-		 * {
-		 * @Override
-		 * public Double apply(Double r)
-		 * {
-		 * return 1 - (r * r);
-		 * }
-		 * });
-		 * }
-		 */
+		for (int i = 0; i < 4; i++)
+		{
+			SpikeObject spike = new SpikeObject(Math.max(5 + rand.nextGaussian() * 1.0, 1));
+			spike.spawn(world);
+			spike.randomLoc(rand, new Function<Double, Double>()
+			{
+				@Override
+				public Double apply(Double r)
+				{
+					return 1 - (r * r);
+				}
+			});
+		}
 		
 		double time = 0;
 		while (world.countCreeps() > 0 && time < 6000)
@@ -332,5 +330,10 @@ public class TestEvolver extends CreepEvolver
 	
 	public void postRenderTick()
 	{
+	}
+	
+	public FoodObject genFood(Random rand)
+	{
+		return new FoodObject(Math.max(5 + rand.nextGaussian() * 1.0, 1));
 	}
 }

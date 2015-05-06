@@ -3,5 +3,7 @@ package net.eekysam.creeps.grow.sim;
 public enum EnumDmgType
 {
 	STARVE,
-	SPIKE;
+	SPIKE,
+	WALL,
+	CREEP;
 }
