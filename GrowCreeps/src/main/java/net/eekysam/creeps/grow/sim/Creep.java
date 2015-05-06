@@ -16,6 +16,7 @@ public class Creep extends WorldObject
 	public double[] hits;
 	
 	public double rot;
+	public double lastrot;
 	public double sin;
 	public double cos;
 	public boolean backwards;
@@ -23,6 +24,9 @@ public class Creep extends WorldObject
 	
 	public double[] rayHit;
 	public int myColor;
+	
+	public double action1;
+	public double action2;
 	
 	public Creep(CreepSpec spec)
 	{
@@ -100,6 +104,8 @@ public class Creep extends WorldObject
 			this.info.age++;
 			this.info.adjustedAge += this.speed;
 			double vel = (this.velx * this.velx + this.vely * this.vely) / (this.spec.maxVel * this.spec.maxVel);
+			double drot = Math.abs(this.rot - this.lastrot) / this.spec.rotSpeed;
+			this.lastrot = this.rot;
 			
 			if (this.info.food <= 0)
 			{
@@ -108,9 +114,9 @@ public class Creep extends WorldObject
 			}
 			else
 			{
-				double veldec = vel * 0.06 + 1;
-				this.info.food -= 0.1 * veldec * this.speed;
-				this.info.foodLost += 0.1 * veldec * this.speed;
+				//double veldec = Math.abs(vel - 0.5) * 0.1 + drot * 0.2 + 1;
+				this.info.food -= 0.1 * this.speed;
+				this.info.foodLost += 0.1 * this.speed;
 			}
 			
 			if (this.info.health <= 0)
@@ -142,10 +148,7 @@ public class Creep extends WorldObject
 	public void wallCollision(double dx, double dy)
 	{
 		this.addHit(dx, dy, -0.5);
-		if (this.backwards)
-		{
-			this.info.health -= 0.1 * this.speed;
-		}
+		//this.info.health -= 0.1 * this.speed;
 	}
 	
 	public void addHit(double dx, double dy, double hardness)
@@ -195,6 +198,7 @@ public class Creep extends WorldObject
 	{
 		super.randomLoc(rand, radSmudge);
 		this.rot = rand.nextDouble() * 2 * Math.PI;
+		this.lastrot = this.rot;
 	}
 	
 	public double intersection(double h, double k, double r, int dir)
@@ -254,10 +258,12 @@ public class Creep extends WorldObject
 		World.renderCircle(this.x, this.y, this.radius * 1.2, 2, World.rad(-15) + this.rot, World.rad(15) + this.rot);
 		
 		/*
-		double rad = this.rayHit[0];
-		GL11.glColor3d(1, 1, 1);
-		World.renderCircle(this.x, this.y, rad, 5, (this.radius * World.rad(-15)) / rad + this.rot, (this.radius * World.rad(15)) / rad + this.rot);
-		*/
+		 * double rad = this.rayHit[0];
+		 * GL11.glColor3d(1, 1, 1);
+		 * World.renderCircle(this.x, this.y, rad, 5, (this.radius *
+		 * World.rad(-15)) / rad + this.rot, (this.radius * World.rad(15)) / rad
+		 * + this.rot);
+		 */
 		
 		if (this.backwards)
 		{

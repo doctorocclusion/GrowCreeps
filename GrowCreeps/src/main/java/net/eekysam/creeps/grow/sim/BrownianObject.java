@@ -5,8 +5,8 @@ import java.util.Random;
 public abstract class BrownianObject extends WorldObject
 {
 	public static final double velMax = 0.2;
-	public static final double acc = 0.01;
-	public static final double fric = 0.98;
+	public static final double acc = 0.00;
+	public static final double fric = 0.99;
 	
 	public Random rand;
 	
@@ -15,13 +15,13 @@ public abstract class BrownianObject extends WorldObject
 	public BrownianObject(double radius)
 	{
 		super(radius);
-		this.rand = new Random();
 	}
 	
 	@Override
 	public void spawn(World world)
 	{
 		super.spawn(world);
+		this.rand = new Random(world.rand.nextLong());
 		this.adjfric = Math.exp(Math.log(fric) * this.speed);
 	}
 	
@@ -31,8 +31,8 @@ public abstract class BrownianObject extends WorldObject
 		super.tick(pass);
 		if (pass == EnumTickPass.MOVE)
 		{
-			this.velx += (this.rand.nextDouble() * 2 - 1) * acc;
-			this.vely += (this.rand.nextDouble() * 2 - 1) * acc;
+			//this.velx += (this.rand.nextDouble() * 2 - 1) * acc;
+			//this.vely += (this.rand.nextDouble() * 2 - 1) * acc;
 			
 			this.velx *= this.adjfric;
 			this.vely *= this.adjfric;

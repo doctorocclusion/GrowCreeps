@@ -37,6 +37,7 @@ public class CreepInfo
 			spike = this.dmgTaken.get(EnumDmgType.SPIKE);
 		}
 		spike /= this.spec.maxHealth;
-		return Math.sqrt(this.adjustedAge / 1000) * 2.0 - (spike * spike) * 1.7 + Math.sqrt(this.foodEaten / this.spec.maxFood) * 3.0;
+		spike += 1;
+		return (this.adjustedAge / 1000 + 1) * (this.foodEaten / this.spec.maxFood + 1) / spike;
 	}
 }

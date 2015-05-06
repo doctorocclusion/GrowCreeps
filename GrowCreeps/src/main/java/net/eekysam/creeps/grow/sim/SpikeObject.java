@@ -28,6 +28,12 @@ public class SpikeObject extends BrownianObject
 			vel /= ((Creep) other).spec.maxVel;
 			vel *= 0.7;
 			double dmg = 2.0 * (1 + vel);
+			/*
+			 * if (((Creep) other).backwards)
+			 * {
+			 * dmg *= 1.4;
+			 * }
+			 */
 			Creep creep = (Creep) other;
 			creep.damage(EnumDmgType.SPIKE, dmg * this.world().speed);
 		}

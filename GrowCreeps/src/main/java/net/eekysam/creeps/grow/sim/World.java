@@ -29,13 +29,19 @@ public class World
 	
 	private int creepCount = 0;
 	
-	public Random rand = new Random();
+	public Random rand;
 	
 	public World(double radius, double speed, boolean render)
+	{
+		this(radius, speed, render, new Random());
+	}
+	
+	public World(double radius, double speed, boolean render, Random rand)
 	{
 		this.radius = radius;
 		this.speed = speed;
 		this.doRender = render;
+		this.rand = rand;
 	}
 	
 	public void addSpawn(WorldObject object)

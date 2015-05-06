@@ -13,6 +13,8 @@ public class AICreep extends Creep
 	public MLData output;
 	public MLData input;
 	
+	public double lastPress1;
+	
 	public AICreep(CreepSpec spec, BasicNetwork network)
 	{
 		super(spec);
@@ -45,8 +47,8 @@ public class AICreep extends Creep
 			{
 				this.input.add(i + 4, this.rayHit[i]);
 			}
-			this.input.add(8, this.info.food / this.spec.maxFood);
-			this.input.add(9, this.info.health / this.spec.maxHealth);
+			//this.input.add(8, this.info.food / this.spec.maxFood);
+			//this.input.add(9, this.info.health / this.spec.maxHealth);
 			
 			this.output = this.ai.compute(this.input);
 		}
@@ -63,6 +65,18 @@ public class AICreep extends Creep
 			this.vely += this.sin * this.norm(this.output.getData(1)) * this.spec.accel * this.speed;
 			this.velx += -this.sin * this.norm(this.output.getData(2)) * this.spec.accelSide * this.speed;
 			this.vely += this.cos * this.norm(this.output.getData(2)) * this.spec.accelSide * this.speed;
+			
+			double press1 = this.norm(this.output.getData(3));
+			this.action1 = (press1 - this.lastPress1);
+			if (this.action1 > 1)
+			{
+				this.action1 = 1;
+			}
+			if (this.action1 < 0)
+			{
+				this.action1 = 0;
+			}
+			
 			this.myColor = this.spec.baseColor;
 			//this.myColor |= ((int) (this.norm(this.output.getData(3)) * 128 + 64) & 0xFF) << 16;
 			//this.myColor |= ((int) (this.norm(this.output.getData(4)) * 128 + 64) & 0xFF) << 8;

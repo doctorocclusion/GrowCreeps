@@ -17,7 +17,7 @@ import org.apache.commons.math3.genetics.TournamentSelection;
 import org.apache.commons.math3.genetics.UniformCrossover;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.UnivariateStatistic;
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.encog.engine.network.activation.ActivationFunction;
 import org.encog.engine.network.activation.ActivationSigmoid;
@@ -31,7 +31,6 @@ import net.eekysam.creeps.grow.CreepSpec;
 import net.eekysam.creeps.grow.sim.AICreep;
 import net.eekysam.creeps.grow.sim.Creep;
 import net.eekysam.creeps.grow.sim.FoodObject;
-import net.eekysam.creeps.grow.sim.SpikeObject;
 import net.eekysam.creeps.grow.sim.World;
 import net.eekysam.creeps.grow.sim.WorldObject;
 
@@ -51,12 +50,12 @@ public class TestEvolver extends CreepEvolver
 		}
 	}
 	
-	public int tournamentSize = 5;
-	public double crossoverRatio = 0.8;
+	public int tournamentSize = 16;
+	public double crossoverRatio = 0.98;
 	public int simSize = 8;
 	public int populationSize = 24;
 	
-	public UnivariateStatistic center = new Mean();
+	public UnivariateStatistic center = new Median();
 	
 	public Predicate<WorldRun> doRender = new Predicate<WorldRun>()
 	{
@@ -79,13 +78,13 @@ public class TestEvolver extends CreepEvolver
 	{
 		CreepSpec spec = new CreepSpec();
 		/*
-		JordanPattern patt = new JordanPattern();
-		patt.setInputNeurons(10);
-		patt.setOutputNeurons(3);
-		patt.addHiddenLayer(20);
-		patt.setActivationFunction(new ActivationSigmoid());
-		BasicNetwork net = (BasicNetwork) patt.generate();
-		*/
+		 * JordanPattern patt = new JordanPattern();
+		 * patt.setInputNeurons(10);
+		 * patt.setOutputNeurons(3);
+		 * patt.addHiddenLayer(20);
+		 * patt.setActivationFunction(new ActivationSigmoid());
+		 * BasicNetwork net = (BasicNetwork) patt.generate();
+		 */
 		BasicNetwork net = this.makeNetwork();
 		return new Supplier<CreepChrom>()
 		{
@@ -104,10 +103,10 @@ public class TestEvolver extends CreepEvolver
 		BasicLayer layer1;
 		BasicLayer layer2;
 		BasicNetwork network = new BasicNetwork();
-		network.addLayer(new BasicLayer(null, true, 10));
+		network.addLayer(new BasicLayer(null, true, 8));
 		network.addLayer(layer1 = new BasicLayer(active, true, 12));
 		network.addLayer(layer2 = new BasicLayer(active, true, 8));
-		network.addLayer(new BasicLayer(active, false, 3));
+		network.addLayer(new BasicLayer(active, false, 4));
 		layer1.setContextFedBy(layer2);
 		network.getStructure().finalizeStructure();
 		network.reset();
@@ -135,19 +134,18 @@ public class TestEvolver extends CreepEvolver
 	@Override
 	public MutationPolicy mutation()
 	{
-		return new CreepMutation(1, 8)
+		return new CreepMutation(1, 1)
 		{
 			@Override
 			public Double apply(Double past, Random rand)
 			{
-				double mult = rand.nextDouble() * 2 - 1;
-				mult *= 0.4;
+				double mult = rand.nextGaussian() * 0.1;
 				mult += 1;
-				if (rand.nextFloat() < 0.2)
+				if (rand.nextFloat() < 0.01)
 				{
 					mult *= -1;
 				}
-				return past * mult + (rand.nextDouble() * 2 - 1) * 0.35;
+				return past * mult + rand.nextGaussian() * 0.1;
 			}
 		};
 	}
@@ -175,9 +173,11 @@ public class TestEvolver extends CreepEvolver
 	{
 		int n = 16;
 		
+		Random rand = new Random();
+		long seed = rand.nextLong();
+		
 		//Make sure that the number of chroms is a multiple of the simSize
 		int num = chroms.size();
-		Random rand = new Random();
 		int rem = num % this.simSize;
 		for (int i = 0; i < rem; i++)
 		{
@@ -185,7 +185,7 @@ public class TestEvolver extends CreepEvolver
 		}
 		
 		//Shuffle the chroms
-		Collections.shuffle(chroms);
+		Collections.shuffle(chroms, rand);
 		
 		//Summary Stats
 		SummaryStatistics stats = new SummaryStatistics();
@@ -197,6 +197,8 @@ public class TestEvolver extends CreepEvolver
 		int k = 0;
 		while (it.hasNext())
 		{
+			Random rand1 = new Random(seed);
+			
 			//Make arrays of creeps for sim
 			Creep[] creeps = new Creep[this.simSize];
 			CreepChrom[] runpop = new CreepChrom[creeps.length];
@@ -213,7 +215,7 @@ public class TestEvolver extends CreepEvolver
 					CreepChrom chrom = runpop[i];
 					creeps[i] = new AICreep(chrom.spec, chrom.brain);
 				}
-				this.runWorld(creeps, run);
+				this.runWorld(creeps, run, new Random(rand1.nextLong()));
 				for (int i = 0; i < creeps.length; i++)
 				{
 					fitness[i + k * creeps.length][j] = creeps[i].info.fitness();
@@ -239,12 +241,11 @@ public class TestEvolver extends CreepEvolver
 		this.endGeneration(generation, stats);
 	}
 	
-	public void runWorld(Creep[] creeps, WorldRun run)
+	public void runWorld(Creep[] creeps, WorldRun run, Random rand)
 	{
 		double rad = 150;
 		double speed = 4;
-		Random rand = new Random();
-		World world = new World(rad, speed, false)
+		World world = new World(rad, speed, false, rand)
 		{
 			@Override
 			public void spawnNew()
@@ -286,19 +287,22 @@ public class TestEvolver extends CreepEvolver
 			});
 		}
 		
-		for (int i = 0; i < 10; i++)
-		{
-			SpikeObject spike = new SpikeObject(Math.max(6 + rand.nextGaussian() * 1.3, 1));
-			spike.spawn(world);
-			spike.randomLoc(rand, new Function<Double, Double>()
-			{
-				@Override
-				public Double apply(Double r)
-				{
-					return 1 - (r * r);
-				}
-			});
-		}
+		/*
+		 * for (int i = 0; i < 10; i++)
+		 * {
+		 * SpikeObject spike = new SpikeObject(Math.max(6 + rand.nextGaussian()
+		 * * 1.3, 1));
+		 * spike.spawn(world);
+		 * spike.randomLoc(rand, new Function<Double, Double>()
+		 * {
+		 * @Override
+		 * public Double apply(Double r)
+		 * {
+		 * return 1 - (r * r);
+		 * }
+		 * });
+		 * }
+		 */
 		
 		double time = 0;
 		while (world.countCreeps() > 0 && time < 6000)

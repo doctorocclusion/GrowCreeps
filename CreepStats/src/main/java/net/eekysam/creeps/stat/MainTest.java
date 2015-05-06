@@ -31,7 +31,7 @@ public class MainTest
 			{
 				this.gen = generation;
 				
-				Display.setTitle(String.format("GrowCreeps | Gen - %d | r = %.3f", this.gen, this.maxRegression.getR()));
+				Display.setTitle(String.format("GrowCreeps | Gen - %d | r = %.3f | %.2f - %.2f", this.gen, this.maxRegression.getR(), stats.getMin(), stats.getMax()));
 				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 				renderGraph(this);
 				Display.update();
@@ -76,7 +76,7 @@ public class MainTest
 			}
 		};
 		
-		CreepPopulation pop = evo.evolve(0.2, 0.7, 0.5, 300);
+		CreepPopulation pop = evo.evolve(0.05, 0.5, 0.9, 300);
 		pop.runSimulation(300);
 		
 		Display.destroy();
@@ -101,6 +101,15 @@ public class MainTest
 			for (int i = 0; i < num; i++)
 			{
 				double y = evo.generationStats.get(i).getMax();
+				y -= min;
+				y /= max - min;
+				drawPoint((double) i / (num - 1), y);
+			}
+			GL11.glEnd();
+			GL11.glBegin(GL11.GL_LINE_STRIP);
+			for (int i = 0; i < num; i++)
+			{
+				double y = evo.generationStats.get(i).getMin();
 				y -= min;
 				y /= max - min;
 				drawPoint((double) i / (num - 1), y);
