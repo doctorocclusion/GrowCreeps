@@ -4,9 +4,9 @@ import java.util.function.Predicate;
 
 import net.eekysam.creeps.evol.CreepPopulation;
 import net.eekysam.creeps.grow.sim.World;
-import net.eekysam.creeps.stat.TestEvolver.WorldRun;
+import net.eekysam.creeps.stat.Evolver.WorldRun;
 
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
@@ -22,16 +22,16 @@ public class MainTest
 		Keyboard.create();
 		Keyboard.enableRepeatEvents(false);
 		
-		TestEvolver evo = new TestEvolver()
+		Evolver evo = new Evolver()
 		{
 			private int gen;
 			
 			@Override
-			public void endGeneration(int generation, SummaryStatistics stats)
+			public void endGeneration(int generation, DescriptiveStatistics stats)
 			{
 				this.gen = generation;
 				
-				Display.setTitle(String.format("GrowCreeps | Gen - %d | r = %.3f | %.2f - %.2f", this.gen, this.maxRegression.getR(), stats.getMin(), stats.getMax()));
+				Display.setTitle(String.format("GrowCreeps | Gen - %d | r = %.3f | %.2f - %.2f", this.gen, this.meanRegression.getR(), stats.getMin(), stats.getMax()));
 				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 				renderGraph(this);
 				Display.update();
@@ -58,7 +58,7 @@ public class MainTest
 			}
 		};
 		
-		evo.doRender = new Predicate<TestEvolver.WorldRun>()
+		evo.doRender = new Predicate<Evolver.WorldRun>()
 		{
 			boolean render = true;
 			
@@ -82,7 +82,7 @@ public class MainTest
 		Display.destroy();
 	}
 	
-	public static void renderGraph(TestEvolver evo)
+	public static void renderGraph(Evolver evo)
 	{
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();

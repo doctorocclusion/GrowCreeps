@@ -21,7 +21,7 @@ public class Creep extends WorldObject
 	public double lastrot;
 	public double sin;
 	public double cos;
-	public boolean backwards;
+	//public boolean backwards;
 	public double adjfric;
 	
 	public double[] rayHit;
@@ -75,7 +75,7 @@ public class Creep extends WorldObject
 				this.vely *= scale;
 			}
 			
-			this.backwards = this.cos * this.velx + this.sin * this.vely < 0;
+			//this.backwards = this.cos * this.velx + this.sin * this.vely < 0;
 		}
 		else if (pass == EnumTickPass.COMPUTE)
 		{
@@ -105,8 +105,8 @@ public class Creep extends WorldObject
 		{
 			this.info.age++;
 			this.info.adjustedAge += this.speed;
-			double vel = (this.velx * this.velx + this.vely * this.vely) / (this.spec.maxVel * this.spec.maxVel);
-			double drot = Math.abs(this.rot - this.lastrot) / this.spec.rotSpeed;
+			//double vel = (this.velx * this.velx + this.vely * this.vely) / (this.spec.maxVel * this.spec.maxVel);
+			//double drot = Math.abs(this.rot - this.lastrot) / this.spec.rotSpeed;
 			this.lastrot = this.rot;
 			
 			if (this.info.food <= 0)
@@ -277,25 +277,25 @@ public class Creep extends WorldObject
 		 * + this.rot);
 		 */
 		
-		if (this.backwards)
-		{
-			GL11.glColor3d(0.2, 0, 0);
-		}
-		else
-		{
-			GL11.glColor3d(0, 0, 0);
-		}
+		//if (this.backwards)
+		//{
+		//	GL11.glColor3d(0.2, 0, 0);
+		//}
+		//else
+		//{
+		GL11.glColor3d(0, 0, 0);
+		//}
 		World.renderCircle(this.x, this.y, this.radius * 0.8, 12, 0, 2 * Math.PI);
 		GL11.glColor3d(1, 1, 1);
 		World.renderCircle(this.x, this.y, this.radius * 0.6, 10, this.rot, (this.info.food / this.spec.maxFood) * 2 * Math.PI + this.rot);
-		if (this.backwards)
-		{
-			GL11.glColor3d(0.2, 0, 0);
-		}
-		else
-		{
-			GL11.glColor3d(0, 0, 0);
-		}
+		//if (this.backwards)
+		//{
+		//GL11.glColor3d(0.2, 0, 0);
+		//}
+		//else
+		//{
+		GL11.glColor3d(0, 0, 0);
+		//}
 		World.renderCircle(this.x, this.y, this.radius * 0.4, 10, 0, 2 * Math.PI);
 		GL11.glColor3d(1, 1, 1);
 		World.renderCircle(this.x, this.y, this.radius * 0.3, 10, this.rot, (this.info.health / this.spec.maxHealth) * 2 * Math.PI + this.rot);

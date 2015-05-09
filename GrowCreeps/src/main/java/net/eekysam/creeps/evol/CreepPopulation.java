@@ -32,6 +32,11 @@ public class CreepPopulation extends ElitisticListPopulation
 	
 	public void runSimulation(int generation)
 	{
+		this.evolver.simulate(generation, this.makeCreeps());
+	}
+	
+	public ArrayList<CreepChrom> makeCreeps()
+	{
 		ArrayList<CreepChrom> chroms = new ArrayList<CreepChrom>(this.getPopulationSize());
 		Iterator<Chromosome> it = this.iterator();
 		while (it.hasNext())
@@ -42,7 +47,17 @@ public class CreepPopulation extends ElitisticListPopulation
 				chroms.add((CreepChrom) chrom);
 			}
 		}
-		this.evolver.simulate(generation, chroms);
+		return chroms;
+	}
+	
+	public CreepChrom bestCreep()
+	{
+		Chromosome chrom = this.getFittestChromosome();
+		if (chrom instanceof CreepChrom)
+		{
+			return (CreepChrom) chrom;
+		}
+		return null;
 	}
 	
 	@Override

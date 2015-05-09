@@ -27,7 +27,7 @@ public class FoodObject extends BrownianObject
 			{
 				if (this.move)
 				{
-					this.randomLoc(this.rand);
+					//this.randomLoc(this.rand);
 				}
 				else
 				{

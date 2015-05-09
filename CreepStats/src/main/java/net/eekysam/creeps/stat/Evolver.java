@@ -1,7 +1,6 @@
 package net.eekysam.creeps.stat;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -15,6 +14,7 @@ import org.apache.commons.math3.genetics.MutationPolicy;
 import org.apache.commons.math3.genetics.SelectionPolicy;
 import org.apache.commons.math3.genetics.TournamentSelection;
 import org.apache.commons.math3.genetics.UniformCrossover;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.UnivariateStatistic;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
@@ -23,6 +23,8 @@ import org.encog.engine.network.activation.ActivationFunction;
 import org.encog.engine.network.activation.ActivationSigmoid;
 import org.encog.neural.networks.BasicNetwork;
 import org.encog.neural.networks.layers.BasicLayer;
+
+import com.google.common.collect.Lists;
 
 import net.eekysam.creeps.evol.CreepChrom;
 import net.eekysam.creeps.evol.CreepEvolver;
@@ -35,7 +37,7 @@ import net.eekysam.creeps.grow.sim.SpikeObject;
 import net.eekysam.creeps.grow.sim.World;
 import net.eekysam.creeps.grow.sim.WorldObject;
 
-public class TestEvolver extends CreepEvolver
+public class Evolver extends CreepEvolver
 {
 	public class WorldRun
 	{
@@ -67,7 +69,7 @@ public class TestEvolver extends CreepEvolver
 		}
 	};
 	
-	public ArrayList<SummaryStatistics> generationStats;
+	public ArrayList<DescriptiveStatistics> generationStats;
 	public SummaryStatistics allStats;
 	public SummaryStatistics meanStats;
 	public SummaryStatistics maxStats;
@@ -107,7 +109,7 @@ public class TestEvolver extends CreepEvolver
 		network.addLayer(new BasicLayer(null, true, 8));
 		network.addLayer(layer1 = new BasicLayer(active, true, 12));
 		network.addLayer(layer2 = new BasicLayer(active, true, 8));
-		network.addLayer(new BasicLayer(active, false, 5));
+		network.addLayer(new BasicLayer(active, false, 4));
 		layer1.setContextFedBy(layer2);
 		network.getStructure().finalizeStructure();
 		network.reset();
@@ -172,9 +174,49 @@ public class TestEvolver extends CreepEvolver
 	@Override
 	public void simulate(int generation, List<CreepChrom> chroms)
 	{
-		int n = 16;
+		this.simulate(generation, chroms, 16);
+	}
+	
+	public void simulate(int generation, List<CreepChrom> chroms, int n)
+	{
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		this.generationStats.add(stats);
 		
+		double[][] fitness = this.simulateWorld(chroms, generation, n);
+		
+		for (int i = 0; i < chroms.size(); i++)
+		{
+			CreepChrom chrom = chroms.get(i);
+			chrom.fitness = this.center.evaluate(fitness[i]);
+			stats.addValue(chrom.fitness);
+			this.allStats.addValue(chrom.fitness);
+			this.allRegression.addData(generation, chrom.fitness);
+		}
+		
+		this.meanRegression.addData(generation, stats.getMean());
+		this.maxRegression.addData(generation, stats.getMax());
+		this.meanStats.addValue(stats.getMean());
+		this.maxStats.addValue(stats.getMax());
+		
+		this.endGeneration(generation, stats);
+	}
+	
+	public double[][] simulateWorld(List<CreepChrom> chroms, int n)
+	{
+		return this.simulateWorld(chroms, -1, n);
+	}
+	
+	public double[][] simulateWorld(List<CreepChrom> chroms, int generation, int n)
+	{
 		Random rand = new Random(347527825);
+		
+		//Random rand = new Random(347527825 + (generation / 10) % 5);
+		//rand.setSeed(rand.nextLong());
+		
+		//Random rand = new Random(347527829);
+		//rand.setSeed(rand.nextLong());
+		
+		//Random rand = new Random();
 		long seed = rand.nextLong();
 		
 		//Make sure that the number of chroms is a multiple of the simSize
@@ -184,13 +226,6 @@ public class TestEvolver extends CreepEvolver
 		{
 			chroms.add(chroms.get(rand.nextInt(num)));
 		}
-		
-		//Shuffle the chroms
-		Collections.shuffle(chroms, rand);
-		
-		//Summary Stats
-		SummaryStatistics stats = new SummaryStatistics();
-		this.generationStats.add(stats);
 		
 		double[][] fitness = new double[chroms.size()][n];
 		
@@ -210,7 +245,11 @@ public class TestEvolver extends CreepEvolver
 			}
 			for (int j = 0; j < n; j++)
 			{
-				WorldRun run = new WorldRun(generation, k, j);
+				WorldRun run = null;
+				if (generation != -1)
+				{
+					run = new WorldRun(generation, k, j);
+				}
 				for (int i = 0; i < creeps.length; i++)
 				{
 					CreepChrom chrom = runpop[i];
@@ -225,21 +264,17 @@ public class TestEvolver extends CreepEvolver
 			k++;
 		}
 		
-		for (int i = 0; i < chroms.size(); i++)
-		{
-			CreepChrom chrom = chroms.get(i);
-			chrom.fitness = this.center.evaluate(fitness[i]);
-			stats.addValue(chrom.fitness);
-			this.allStats.addValue(chrom.fitness);
-			this.allRegression.addData(generation, chrom.fitness);
-		}
-		
-		this.meanRegression.addData(generation, stats.getMean());
-		this.maxRegression.addData(generation, stats.getMax());
-		this.meanStats.addValue(stats.getMean());
-		this.maxStats.addValue(stats.getMax());
-		
-		this.endGeneration(generation, stats);
+		return fitness;
+	}
+	
+	public double[] simulateWorld(CreepChrom creep, int generation, int n)
+	{
+		return this.simulateWorld(Lists.newArrayList(creep), generation, n)[0];
+	}
+	
+	public double[] simulateWorld(CreepChrom creep, int n)
+	{
+		return this.simulateWorld(creep, -1, n);
 	}
 	
 	public void runWorld(Creep[] creeps, WorldRun run, Random rand)
@@ -261,7 +296,7 @@ public class TestEvolver extends CreepEvolver
 				}
 				if (this.rand.nextDouble() * (60 + total * 1.0) < 1 * this.speed && total < this.countCreeps() * 40)
 				{
-					FoodObject food = TestEvolver.this.genFood(this.rand);
+					FoodObject food = Evolver.this.genFood(this.rand);
 					food.spawn(this);
 					food.randomLoc(this.rand);
 				}
@@ -305,7 +340,10 @@ public class TestEvolver extends CreepEvolver
 		double time = 0;
 		while (world.countCreeps() > 0 && time < 6000)
 		{
-			world.doRender = this.doRender.test(run);
+			if (run != null)
+			{
+				world.doRender = this.doRender.test(run);
+			}
 			if (world.doRender)
 			{
 				this.preRenderTick(time, world);
@@ -320,7 +358,7 @@ public class TestEvolver extends CreepEvolver
 		}
 	}
 	
-	public void endGeneration(int generation, SummaryStatistics stats)
+	public void endGeneration(int generation, DescriptiveStatistics stats)
 	{
 	}
 	

@@ -61,8 +61,8 @@ public class AICreep extends Creep
 				drot /= 0.8;
 				this.rot += drot * this.spec.rotSpeed * this.speed;
 			}
-			this.velx += this.cos * this.norm(this.output.getData(1)) * this.spec.accel * this.speed;
-			this.vely += this.sin * this.norm(this.output.getData(1)) * this.spec.accel * this.speed;
+			this.velx += this.cos * this.output.getData(1) * this.spec.accel * this.speed;
+			this.vely += this.sin * this.output.getData(1) * this.spec.accel * this.speed;
 			this.velx += -this.sin * this.norm(this.output.getData(2)) * this.spec.accelSide * this.speed;
 			this.vely += this.cos * this.norm(this.output.getData(2)) * this.spec.accelSide * this.speed;
 			
@@ -79,6 +79,7 @@ public class AICreep extends Creep
 			this.action1 *= 0.95;
 			this.lastPress1 = press1;
 			
+			/*
 			double press2 = this.norm(this.output.getData(4)) * 5;
 			this.action2 += (press2 - this.lastPress1);
 			if (this.action1 > 1)
@@ -91,6 +92,7 @@ public class AICreep extends Creep
 			}
 			this.action1 *= 0.95;
 			this.lastPress1 = press2;
+			*/
 			
 			this.myColor = this.spec.baseColor;
 			//this.myColor |= ((int) (this.norm(this.output.getData(3)) * 128 + 64) & 0xFF) << 16;
